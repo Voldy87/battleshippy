@@ -1,6 +1,6 @@
 class Ship:
     "A battleship"
-    def __init__ (self, name, player, length):
+    def __init__ (self, name, length):
         self.name = name
         self.length = length
         self.hitCount = 0

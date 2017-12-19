@@ -1,6 +1,7 @@
 from texttable import Texttable
 from colorama import init # call init() at start
 
+
 from ship import Ship
 
 
@@ -16,6 +17,7 @@ class Grid(SeaMap) :
     def __init__ (self,dim):
         SeaMap.__init__(self,dim)
         self.void = True
+        self.player = None
         self.ships = [] 
     def coordsValidateAndConvert(self,letter,number):
         if (len(locals())!=3):
@@ -43,7 +45,7 @@ class Grid(SeaMap) :
         else:
             mid = self.cliSquareMap['Ship']
         return (pre+mid+post+'\x1b[0m')
-    def renderCLI(self, enemyview): #var def have to go outisde gthis fun
+    def printCli(self, enemyview): #var def have to go outisde gthis fun
         dim = self.dim
         letters = list(map(chr, range(65, 91)))
         row_one = [''] + letters[0:dim]
@@ -55,10 +57,7 @@ class Grid(SeaMap) :
             rows.append(temp)
         t = Texttable()
         t.add_rows(rows) #use a generator or something similar to avoid all this arrays...
-        #print(rows)
         print(t.draw())
-    def assignToPlayer (self,player):
-        self.player = player
     def addShip (self,vessel,*pos): # variable length argument list for functions
         self.ships.append(vessel)
         shipIndex = len(self.ships)-1
@@ -85,43 +84,45 @@ class Grid(SeaMap) :
                     if (self.slots[i][0]==shipID): 
                         self.slots[i][1] = -1
         return {"slot":slotStatus, "sinked":isSinked, "hitNumber":shotsNum+1}          
-    def renderAllCli(self):
-        len = dim+1
+    def sinkedShips(self):
+        return list(filter(lambda x : x.sinked==True, self.ships))
+    def allSinked(self):
+        return len(sinkedShips())==len(self.ships)
     def drawGraph():
         pass
     def updateGraph():
         pass
-    def renderAll(mode, uiType):
-        if (mode=="cli"):
-            renderAllCli()
+    def renderFirst(self, uiType, enemyView):
+        if (uiType=="cli"):
+            printCli(enemyView)
         else:
-            drawGraph()
-    def renderUpdate(mode, uiType):
-        if (mode=="cli"):
-            renderAllCli()
+            drawGraph(enemyView)
+    def renderUpdate(self, uiType, enemyView):
+        if (uiType=="cli"):
+            printCli(enemyView)
         else:
-            updateGraph()
+            updateGraph(enemyView)
 
 init()
 g = Grid(4)
-g.renderCLI(False)
-s = Ship("cargo","john",4)
+g.printCli(False)
+s = Ship("cargo",4)
 g.addShip(s, [1,1],[1,2],[1,0],[1,3])
-g.renderCLI(False)
+g.printCli(False)
 g.takeShot([1,1])
-g.renderCLI(False)
+g.printCli(False)
 g.takeShot([3,1])
-g.renderCLI(False)
+g.printCli(False)
 g.takeShot([1,2])
 g.takeShot([1,0])
 g.takeShot([1,0])
-g.renderCLI(False)
+g.printCli(False)
 g.takeShot([1,3])
-g.renderCLI(False)
+g.printCli(False)
 g.takeShot([3,3])
 g.takeShot([3,3])
 g.takeShot([0,3])
-g.renderCLI(False)
+g.printCli(False)
 print(g.coordsValidateAndConvert("A",2))
 print(g.coordsValidateAndConvert("a",1))
 print(g.coordsValidateAndConvert("A",23))

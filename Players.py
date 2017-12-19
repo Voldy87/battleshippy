@@ -1,5 +1,5 @@
 from math import sqrt
-from random import random,seed,choice
+from random import seed,choice
 
 def validSquares(obj,matrix):
     side = int(sqrt(len(matrix)))
