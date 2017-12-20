@@ -47,8 +47,7 @@ class Player:
             return choice(shootables) 
         else:
             temp = [ [x,y] for x in range(0,side) for y in range(0,side) if slots[x*side+y][1]==0]
-            return choice(temp)
-    
+            return choice(temp) 
 
 d = [ [11,0] ,[1,0] ,[0,0] ,[0,1] ,[3,0] ,[4,0] ,[2,0] ,[0,-1] ,[0,10] ,[166,0] ,[0,2] , [111,1] ,[0,0] ,[1,1] ,[0,-2] ,[1,0] ]
 c = [ [0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] , [0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ]

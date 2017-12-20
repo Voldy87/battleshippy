@@ -1,28 +1,23 @@
 import threading
 
 class Action(threading.Thread):
-    def __init__(self, index, uiMode, grids, players, turn, cv): 
+    def __init__(self, index, grids, players, turn, cv): 
         threading.Thread.__init__(self) 
         self.grids = grids
         self.index = index
-        self.uiMode = uiMode
+        self.ui = ui
         self.players = players
-        self.turn = turn
+        self.turn = turn #in one turn each player takes a shot
         self.cv = cv
     def run(self):
         ownGrid, othersGrid = grids[index], grid[1-index]
-        if (self.uiMode = "cli"):
-            cliStart()
-        else:
-            enableMenu()
-        disableMenu() #partial...
-        startSplash(uiMode)
-        Positioning(ownGrid)
-        ownGrid.renderFirst(uiMode) 
-        othersGrid.renderFirst(uiMode)
+        ui.startSplash()
+        vett = askShipNamesAndCoord()
+        ownGrid.shipsPositioning(vett)
+        ownGrid.render(False)
         while True : 
             cv.acquire() #consider not blocking interaction for all block if not ciritcal, especially in GUI
-            if ownGrid.allSinked or othersGrid.allSinked:
+            if (ownGrid.allSinked or othersGrid.allSinked) :
                 cv.notify()
                 cv.release()
                 break
@@ -33,14 +28,16 @@ class Action(threading.Thread):
                 pos = player.computerTarget()
             else: 
                 showLastEnemyShotUpcome()
-                ownGrid.renderUpdate(uiMode)
+                ownGrid.render(False)
                 pos = askTarget()
             shotResult = othersGrid.takeShot(pos)
             if (not isAI):
                 showLastOwnShotUpcome(shotResult)
-                othersGrid.renderUpdate(uiMode)
+                othersGrid.render(False)
             turn = 1-index
             cv.notify()
             cv.release()
         showResults(uiMode)
-        finishSplash(uiMode)
+        ownGrid.render(True)
+        othersGrid.render(True)
+        finishSplash()

@@ -1,6 +1,6 @@
 from tkinter import Tk, Label, Button, Frame, N,S,E,W,SE, StringVar #LEFT, RIGHT
 
-class MyFirstGUI:
+class GUI:
     LABEL_TEXT = [
         "This is our first GUI!",
         "Actually, this is our second GUI.",
@@ -73,6 +73,6 @@ class MyFirstGUI:
         self.label_index += 1
         self.label_index %= len(self.LABEL_TEXT) # wrap around
         self.label_text.set(self.LABEL_TEXT[self.label_index])
-root = Tk()
-my_gui = MyFirstGUI(root)
-root.mainloop()
+##root = Tk()
+##my_gui = GUI(root)
+##root.mainloop()
