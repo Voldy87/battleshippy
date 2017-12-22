@@ -48,21 +48,21 @@ class Player:
         else:
             temp = [ [x,y] for x in range(0,side) for y in range(0,side) if slots[x*side+y][1]==0]
             return choice(temp) 
-
-d = [ [11,0] ,[1,0] ,[0,0] ,[0,1] ,[3,0] ,[4,0] ,[2,0] ,[0,-1] ,[0,10] ,[166,0] ,[0,2] , [111,1] ,[0,0] ,[1,1] ,[0,-2] ,[1,0] ]
-c = [ [0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] , [0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ]
-for i in range(0,10):
-    p = Player("ai","gianni")
-    print("void")
-    print(p.computerTarget(c))
-    p.reactToHit(1,1)
-    #print(p.lastGoodShots)
-    print("1 ship hit at 1,1")
-    print(p.computerTarget(c))
-    p.reactToHit(1,2)
-    print("ship hit at 1,1 and 1,2")
-    print(p.computerTarget(c))
-    print("\n")
+if ( __name__ == "__main__"):
+    d = [ [11,0] ,[1,0] ,[0,0] ,[0,1] ,[3,0] ,[4,0] ,[2,0] ,[0,-1] ,[0,10] ,[166,0] ,[0,2] , [111,1] ,[0,0] ,[1,1] ,[0,-2] ,[1,0] ]
+    c = [ [0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] , [0,0] ,[0,0] ,[0,0] ,[0,0] ,[0,0] ]
+    for i in range(0,10):
+        p = Player("ai","gianni")
+        print("void")
+        print(p.computerTarget(c))
+        p.reactToHit(1,1)
+        #print(p.lastGoodShots)
+        print("1 ship hit at 1,1")
+        print(p.computerTarget(c))
+        p.reactToHit(1,2)
+        print("ship hit at 1,1 and 1,2")
+        print(p.computerTarget(c))
+        print("\n")
 
 
 

@@ -1,4 +1,5 @@
 from tkinter import Tk, Label, Button, Frame, N,S,E,W,SE, StringVar #LEFT, RIGHT
+from i_o import I_O
 
 class GUI:
     LABEL_TEXT = [
@@ -73,6 +74,11 @@ class GUI:
         self.label_index += 1
         self.label_index %= len(self.LABEL_TEXT) # wrap around
         self.label_text.set(self.LABEL_TEXT[self.label_index])
+
+
+
+    def renderGrid(self, grid, enemyView, lastshotView):
+        pass  #gui first time draw, others update
 ##root = Tk()
 ##my_gui = GUI(root)
 ##root.mainloop()
