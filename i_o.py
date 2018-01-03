@@ -10,6 +10,8 @@ and remote (e.g. playing the game on the web site built with Django)
 __author__ =  'Andrea Orlandi'
 __version__=  '1.0'
 
+import time, sys #all?
+
 class I_O:
     def __init__(self,inpuType="stdin", outpuType="stdout"):
         """
@@ -23,34 +25,41 @@ class I_O:
         """
         self.inType = inpuType
         self.outType = outpuType
+    def stdIn_cli__loading(interval): #percentual loading with ANSI escape codes
+        print ("Loading...")
+        for i in range(0, 100):
+            time.sleep(interval)
+            sys.stdout.write(u"\u001b[1000D" + str(i + 1) + "%")
+            sys.stdout.flush()
+        print()
     def write(self,string):
         switch = {
-            'stdCLI' : stdOut_cli, # stdOut is a fun
-            'stdGUI' : stdOut_tkinter,
-            'socket' : writeSocket, 
-            'django' : djangoSend}
+            'stdCLI' : self.stdOut_cli, # stdOut is a fun
+            'stdGUI' : self.stdOut_tkinter,
+            'socket' : self.writeSocket, 
+            'django' : self.djangoSend}
         switch[self.outType](string)
     def read(self):
         switch = {
-            'stdCLI' : stdIn_cli,
-            'stdGUI' : stdIn_tkinter,
-            'socket' : readSocket, 
-            'django' : djangoRcv}
-        return switch[self.inType]
+            'stdCLI' : self.stdIn_cli,
+            'stdGUI' : self.stdIn_tkinter,
+            'socket' : self.readSocket, 
+            'django' : self.djangoRcv}
+        return switch[self.inType]()
     def stdOut_cli(self,string):
         print(string)
-    def stdOut_tkinter():
+    def stdOut_tkinter(self, data):
         pass
-    def stdIn_cli():
-        line = input()
+    def stdIn_cli(self):
+        line = input() #former raw_input
         return line
-    def stdIn_tkinter():
+    def stdIn_tkinter(self):
         pass
-    def writeSocket():
+    def writeSocket(self, data):
         pass
-    def readSocket():
+    def readSocket(self):
         pass
-    def djangoSend():
+    def djangoSend(self, data):
         pass
-    def djangoRcv():
+    def djangoRcv(self):
         pass
