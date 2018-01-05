@@ -1,11 +1,10 @@
+# python -m local_executable.battleshippy
 
-from grid import Grid
-from players import Player
-from action import Action
-from cli import CLI
-from gui import GUI
-#from data import DataDb, DataFile
-#from menu import Menu #optional??
+import common.game.grid as Gr
+import common.game.player as Pl
+import common.interface.cli as CL, common.interface.gui as GU
+##import common.interface.menu as ME
+##import common.data.db as DB, common.data.file as FI 
 
 import threading
 from random import seed,choice
@@ -20,9 +19,9 @@ class Action(threading.Thread):
         self.grids = grids
         self.index = index
         if(uiMode=="cli"):
-            self.ui=CLI()
+            self.ui=CL.CLI()
         else:
-            self.ui=GUI()
+            self.ui=CL.GUI()
 ##       if(dataMode=="localDB" || dataMode=="remoteDB"):
 ##            self.data=DataDb()
 ##        else:
@@ -103,8 +102,8 @@ class Action(threading.Thread):
 
 
 def initGame (side,players,uiMode):
-    grids = [Grid(side,uiMode), Grid(side,uiMode)]
-    players = [Player("andrea","HUMAN"),Player("computer", "PC")]
+    grids = [Gr.Grid(side), Gr.Grid(side)]
+    players = [Pl.Player("andrea","HUMAN"),Pl.Player("computer", "PC")]
     seed()
     l = [lambda x: x.reverse(), lambda x: None]
     choice(l)(players) #randomly choose which player will start (has index 0)

@@ -1,19 +1,23 @@
 from operator import itemgetter
 
-from ship import Ship
+#from ship import Ship
 
 class SeaMap :
     def __init__ (self, dim): #in future a rectangular grid??
+        ''' Constructor for this class. Only square side needed.'''
         self.dim = dim
         self.slots = [ [[0,0] for x in range(dim)] for y in range(dim) ] # [0,n] empty slot hit n times before (also 0); [id,n] slot with ship id hit n times before (if n==-1 sinked ship)
         print("Created grid with " + str(dim**2) + " squares")
 class Grid(SeaMap) :
     def __init__ (self,dim):
+        ''' Constructor for this class: side, empty flag, ships list, map information about last shot taken on.'''
         SeaMap.__init__(self,dim)
         self.void = True
         self.lastShotInfo = dict()
         self.ships = []
     def coordsValidate(self,vett,OnlyNum=False):
+        '''Validate, for the given grid, a couple of coordinates (2nd argument) in one of the two
+        possibile formats, letter+number or two numbers, decided by the 3rd argument)'''
         dim = self.dim
         if (OnlyNum):
             x,y = vett
@@ -25,8 +29,13 @@ class Grid(SeaMap) :
             letterAscii = ord(letter.upper())
             if ( (letterAscii not in range(65,65+dim)) or (number not in range(1,dim+1)) ):
                 return False
-            return [letter,number]
-    def coordsConvert(self,vett,ToNum=True):
+            return True
+    def coordsConvert(self,vett,ToNum=True): #to extend using class argument to locate alpahbet used for letter (now default A-Z)
+        '''Convert coordinates for the given grid between two formats
+        - AlphaNumeric  (letter + integer >0, e.g. C3)
+        - Numeric (double 0-indexed matrix, e.g. [2][0])
+        The direction of the conversion is given by the third argument, which
+        by default is false, thus making conversion as [A,12]=>[0,11]'''
         if (ToNum):
             return [ ord(vett[0].upper())-65 , vett[1]-1 ] #e.g. ["B",3] => [4,1]
         else:
@@ -35,9 +44,8 @@ class Grid(SeaMap) :
     def clear():
         pass
     def coordsValidateAndConvert(self,vett):
-        coord = self.coordsValidate(vett)
-        if (coord):
-            return self.coordsConvert(coord)
+        if self.coordsValidate(vett):
+            return self.coordsConvert(vett)
         else:
             return False
     def posChecker (self, distance, AlphaNumPositions):
@@ -85,17 +93,27 @@ then square availability'''
             return False #points are consecutive?
         return True              
     def addShip (self,vessel,pos): # variable length argument list for functions
-        '''Given a single ship and its coordinates put it on the grid, without checking if the space is free'''
-        coords = [self.coordsValidateAndConvert(spam) for spam in pos]
+        '''Given a single ship and its coordinates put it on the grid, checking
+        if coordinates are of the correct number and valid, but without checking
+        if the space that they occupy is consecutive or free'''
+        if vessel.length != len(pos) or vessel.length not in range (1,self.dim+1): #ship too long, not enough or too many coordinates for this ship
+            return False
+        coords = []
+        for spam in pos :
+            temp = self.coordsValidateAndConvert(spam)
+            if temp :
+                coords.append(temp)
+            else :
+                coords = [False]
+                break
         if False in coords: #never fails as the coords validity is checked before invoking this function
             return False
         self.ships.append(vessel)
         shipIndex = len(self.ships)-1
         for [x,y] in coords:
-            print(str(x))
-            print(str(y))
             self.slots[x][y] = [shipIndex+1,0]
         self.void = False
+        return True
     def shipsPositioning(self,vett):
         for spam in vett:
             self.addShip(spam) #spam = ship,pos

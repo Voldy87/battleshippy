@@ -1,10 +1,11 @@
 from texttable import Texttable
 from colorama import init # call init() at start
 
-from i_o import I_O
+from common.game.grid import Grid
+from common.interface.i_o import I_O
 #togliere questi sotto se nn faccio il test qui
-from grid import Grid
-from ship import Ship
+
+from common.game.ship import Ship
 
 class CLI:
     def __init__(self):
@@ -33,6 +34,11 @@ class CLI:
             mid = self.cliSquareMap['Ship']
         return (pre+mid+post+'\x1b[0m')
     def renderGrid(self, grid, fullView, lastshotView): #var def have to go outisde gthis fun
+        '''Show the grid on the console, with shoots and ships if present and desired:
+            - grid to show
+            - view all ships or only hitten parts
+            - highlight last shot or not
+        '''
         dim = len(grid.slots)
         letters = list(map(chr, range(65, 91)))
         row_one = [''] + letters[0:dim]
@@ -43,7 +49,7 @@ class CLI:
                 highlightShot = (lastshotView) and ("coords" in grid.lastShotInfo) and (grid.lastShotInfo["coords"]==[x,y])
                 temp.append(self.getSquareCode(grid.slots[x][y],fullView, highlightShot))
             rows.append(temp)
-        t = Texttable()
+        t = Texttable(0) #(github.com/foutaise/texttable) "__init__(self, max_width=80) max_width is an integer, specifying the maximum width of the table if set to 0, size is unlimited, therefore cells won't be wrapped"
         t.add_rows(rows) #use a generator or something similar to avoid all this arrays...
         print(t.draw())
     def askAllShips(self,side,ships):
@@ -54,30 +60,34 @@ class CLI:
         name = ship.name
         pointCoords = []
         for spam in range(1,dim+1):
-            self.io.write("Insert "+name+" ship position ("+str(spam)+" of "+str(dim)+")")
-            while True:
-                self.io.write("VERTICAL/COLUMN(letter):")
-                x = self.io.read()
-                if (65<=ord(x.upper())<=65+side-1):
-                    break
-                self.io.write("A letter in the range A-"+chr(65+dim-1)+", please")
-            while True:
-                self.io.write("HORIZONTAL/ROW(number):")
-                y = self.io.read()
-                try:
-                   y = int(y)
-                except ValueError:
-                   self.io.write ('A number, between 0 and '+ str(side) + " please")
-                   continue
-                if ( 0 <= y < side):
-                    break
+            flag = True
+            while flag:
+                flag = False
+                self.io.write("Insert "+name+" ship position ("+str(spam)+" of "+str(dim)+")")
+                while True:
+                    self.io.write("VERTICAL/COLUMN(letter):")
+                    x = self.io.read()
+                    if (65<=ord(x.upper())<=65+side-1):
+                        break
+                    self.io.write("A letter in the range A-"+chr(65+dim-1)+", please")
+                while True:
+                    self.io.write("HORIZONTAL/ROW(number):")
+                    y = self.io.read()
+                    try:
+                       y = int(y)
+                    except ValueError:
+                       self.io.write ('A number, between 0 and '+ str(side) + " please")
+                       continue
+                    if ( 0 <= y < side):
+                        break
+                    else:
+                        self.io.write ('A number between 0 and '+ str(side-1) + " please")
+                pos = [x.upper(),y]
+                if pos not in pointCoords: 
+                    pointCoords.append(pos)
                 else:
-                    self.io.write ('A number between 0 and '+ str(side-1) + " please")
-            pos = [x.upper(),y]
-            if pos not in pointCoords: 
-                pointCoords.append([x.upper(),y])
-            else:
-                self.io.write ('Already used position!")
+                    self.io.write ('Already used position!')
+                    flag= True
         return pointCoords   
     def shotUpcome(self, shotInfo):
         pos, shipId, shots = shotInfo.coords, shotInfo.self.slots[x][y][0], shotInfo.self.slots[x][y][1]
@@ -99,8 +109,6 @@ if ( __name__ == "__main__"):
     dim = 4
     g = Grid(dim)
     c = CLI()
-    print(g.coordsConvert(["C",2]))
-    print(g.coordsConvert([1,2],False))
     c.renderGrid(g,False,False)#c.print(g.slots,False) 
     s = Ship("cargo",4)
     res = g.addShip(s, [["B",2],["B",3],["B",1],["B",4]])

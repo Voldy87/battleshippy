@@ -31,6 +31,7 @@ def validSquares(obj,matrix):
         return neighbors
 
 class Player:
+    '''Constructor'''
     def __init__(spam,nature,name):
         spam.nature = nature
         spam.name = name

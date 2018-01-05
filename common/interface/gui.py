@@ -1,5 +1,5 @@
 from tkinter import Tk, Label, Button, Frame, N,S,E,W,SE, StringVar #LEFT, RIGHT
-from i_o import I_O
+from common.interface.i_o import I_O
 
 class GUI:
     LABEL_TEXT = [
