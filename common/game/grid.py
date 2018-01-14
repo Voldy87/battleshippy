@@ -7,7 +7,7 @@ class SeaMap :
         ''' Constructor for this class. Only square side needed.'''
         self.dim = dim
         self.slots = [ [[0,0] for x in range(dim)] for y in range(dim) ] # [0,n] empty slot hit n times before (also 0); [id,n] slot with ship id hit n times before (if n==-1 sinked ship)
-        print("Created grid with " + str(dim**2) + " squares")
+        #print("Created grid with " + str(dim**2) + " squares")
 class Grid(SeaMap) :
     def __init__ (self,dim):
         ''' Constructor for this class: side, empty flag, ships list, map information about last shot taken on.'''
@@ -18,10 +18,12 @@ class Grid(SeaMap) :
     def coordsValidate(self,vett,OnlyNum=False):
         '''Validate, for the given grid, a couple of coordinates (2nd argument) in one of the two
         possibile formats, letter+number or two numbers, decided by the 3rd argument)'''
+        if (len(vett)==0):
+            return False
         dim = self.dim
         if (OnlyNum):
             x,y = vett
-            return ( x in range(0,dim+1) and y in range(0,dim+1) )
+            return ( x in range(0,dim) and y in range(0,dim) )
         else:
             letter, number = vett
             if ( type(letter)!=str or type(number)!=int ):
@@ -37,9 +39,9 @@ class Grid(SeaMap) :
         The direction of the conversion is given by the third argument, which
         by default is false, thus making conversion as [A,12]=>[0,11]'''
         if (ToNum):
-            return [ ord(vett[0].upper())-65 , vett[1]-1 ] #e.g. ["B",3] => [4,1]
+            return [ ord(vett[0].upper())-65 , vett[1]-1 ] #e.g. ["B",3] => [1,2]
         else:
-            return [ chr(vett[0]+65).upper() , vett[1]+1 ] 
+            return [ chr(vett[0]+65).upper() , vett[1]+1 ] #e.g. [0,1] => ["A",2]
         "The grid of a player, with his/her ships"
     def clear():
         pass
@@ -49,34 +51,27 @@ class Grid(SeaMap) :
         else:
             return False
     def posChecker (self, distance, AlphaNumPositions):
-        '''Check is a set of positions for a ship is acceptable: first coordinates validity,
-then square availability'''
+        '''Check is a set of positions for a ship is acceptable, giving a distance from other ships'''
         num = len(AlphaNumPositions)
         if (num==0):
             return True
+        if (any(AlphaNumPositions.count(x) > 1 for x in AlphaNumPositions)): #all coords given are unique
+            return False
         NumericPositions = []
         for spam in AlphaNumPositions: #single point is valid and free?
             coords = self.coordsValidateAndConvert(spam)
-            if (not coords):
-                print("INVALID")
+            if (not coords): #invalid coordinate
                 return False
             if (distance==0):
                 if (self.slots[coords[0]][coords[1]][0]!=0):
-                    print("BUSY")
-                    return False
+                    return False #slot already bearing a part of a ship
             else:
                 x,y = coords
                 lim = self.dim
                 for i in range(-distance,distance+1):
                     for j in range(-distance,distance+1):
-                        #print(str(self.slots[x+i][y+j][0]))
-                        if (x+i<lim) and (y+j<lim) and (self.slots[x+i][y+j][0]!=0):
-                            #print(str(x+i))
-                            #print(str(y+j))
-                            #print(str(self.slots[x+i][y+j][0]))
-                            #print("\n")
-                            print("BUSY")
-                            return False
+                        if (x+i in range(0,lim)) and (y+j in range(0,lim)) and (self.slots[x+i][y+j][0]!=0):
+                            return False #slot already bearing a part of a ship
             NumericPositions.append(coords)  
         if (num==1):
             return (self.slots[0][0][0]==0)
@@ -85,12 +80,12 @@ then square availability'''
         elif (NumericPositions[0][1]==NumericPositions[1][1]):
             index = 0
         else:
-            print("DIAG")
-            return False
+            return False #not consecutive coordinates
         sortedPos = sorted(NumericPositions, key=itemgetter(index))
+        if( sortedPos[num-1][1-index] != sortedPos[0][1-index] ):
+            return False #not consecutive coordinates
         if( sortedPos[num-1][index] - sortedPos[0][index] != (num-1) ):
-            print("LEN")
-            return False #points are consecutive?
+            return False #not consecutive coordinates
         return True              
     def addShip (self,vessel,pos): # variable length argument list for functions
         '''Given a single ship and its coordinates put it on the grid, checking
@@ -118,7 +113,6 @@ then square availability'''
         for spam in vett:
             self.addShip(spam) #spam = ship,pos
     def takeShot(self,coord):
-        print("Taken shot at "+str(coord[0])+"-"+str(coord[1]))
         x = coord[0]
         y = coord[1]
         shipID = self.slots[x][y][0]
@@ -148,9 +142,7 @@ then square availability'''
             for x in range(-radius,radius+1):
                 for y in range(-radius,radius+1):
                     target = [ pos[0]+x , pos[1]+y ]
-                    if (not self.coordsValidate(target,True)):
-                        continue
-                    else: 
+                    if (self.coordsValidate(target,True)):
                         self.takeShot(target)
         return True
     def sinkedShips(self):
