@@ -1,6 +1,6 @@
 #   RUN python -m pytest -vs  IN THE TEST DIR
 
-from common.game import grid as G, ship as S
+from common.game import grid as G, ship as S, player as P
 import common.interface.cli as C
 
 import pytest
@@ -15,43 +15,59 @@ def f():
 def test_exceptions():
     with pytest.raises(SystemExit):
         f()
+# PLAYER
+class TestPlayerClassAndUtils(object):
+    def test_squaresBetween(idle):
+        assert P.squaresBetween([0,3],[0,8])== [[0,3],[0,4],[0,5],[0,6],[0,7],[0,8]]
+        assert P.squaresBetween([0,8],[0,2])== [[0,8], [0,7], [0,6],[0,5],[0,4],[0,3],[0,2]]
+        assert P.squaresBetween([2,13],[2,9])== [[2,13],[2,12],[2,11],[2,10],[2,9],]
+        assert P.squaresBetween([1,3],[2,3])== [[1,3],[2,3]]
+        assert P.squaresBetween([40,23],[45,23])== [[40,23],[41,23],[42,23],[43,23],[44,23],[45,23]]
+        assert P.squaresBetween([2,9],[9,9])== [[2,9],[3,9],[4,9],[5,9],[6,9],[7,9],[8,9],[9,9]]
+        assert P.squaresBetween([22,99],[18,9])== [[22,99],[21,99],[20,99],[19,99],[18,99]]
         
 # SHIP
 class TestShipClass(object):
     def test_constructor(idle):
-        assert True
+        assert str(S.Ship("cargo",3)) == "cargo: 3 long, hit 0 times"
 # GRID  
-class TestGridClass(object):
+class TestGridClassAndUtils(object):
     def test_coordsConvert(gilliam):
-        g = G.Grid(4)
-        assert g.coordsConvert(["C",2])==[2,1]
-        assert g.coordsConvert(["c",2])==[2,1]
-        assert g.coordsConvert(["C",2],True)==[2,1]
-        assert g.coordsConvert([1,2],False)==['B',3]
-        assert g.coordsConvert(["A",1])==[0,0]
-        assert g.coordsConvert(["d",4])==[3,3]
-        assert g.coordsConvert(["A",2],True)==[0,1]
-        assert g.coordsConvert([2,2],False)==['C',3]
-        assert g.coordsConvert([3,0],False)==['D',1]
+        assert G.coordsConvert(["C",2],LetCol=False)==[2,1]
+        assert G.coordsConvert(["c",2],LetCol=False)==[2,1]
+        assert G.coordsConvert(["C",2])==[1,2]
+        assert G.coordsConvert(["C",2],True,True)==[1,2]
+        assert G.coordsConvert(["C",2],True)==[1,2]
+        assert G.coordsConvert(["C",2],True,False)==[2,1]
+        assert G.coordsConvert([1,2],False,False)==['B',3]
+        assert G.coordsConvert(["A",1])==[0,0]
+        assert G.coordsConvert(["d",4])==[3,3]
+        assert G.coordsConvert(["A",1],True,False)==[0,0]
+        assert G.coordsConvert(["d",4],True,False)==[3,3]
+        assert G.coordsConvert(["A",2],True,False)==[0,1]
+        assert G.coordsConvert([2,2],False,False)==['C',3]
+        assert G.coordsConvert([3,0],False,False)==['D',1]
+        assert G.coordsConvert([0,3],False,True)==['A',4]
+        assert G.coordsConvert([3,1],False,True)==['D',2]
     def test_coordsValidate(idle):
-        g = G.Grid(8)
-        assert g.coordsValidate(["C",2]) == True
-        assert g.coordsValidate(["C",7], False) == True
-        assert g.coordsValidate(["H",2]) == True
-        assert g.coordsValidate([4,5],True) == True
-        assert g.coordsValidate([0,0], True) == True
-        assert g.coordsValidate([7,7], True) == True
-        assert g.coordsValidate([0,0], True) == True
-        assert g.coordsValidate(["R",2]) == False
-        assert g.coordsValidate(["C",9]) == False
-        assert g.coordsValidate(["C",22]) == False
-        assert g.coordsValidate(["C",2], True) == False
-        assert g.coordsValidate(["A",1], True) == False
-        assert g.coordsValidate([0,8],True) == False
-        assert g.coordsValidate([0,28]) == False
-        assert g.coordsValidate([8,2]) == False
-        assert g.coordsValidate([-33,8]) == False
-        assert g.coordsValidate(["A",13], False) == False
+        dim = 8
+        assert G.coordsValidate(dim,["C",2]) == True
+        assert G.coordsValidate(dim,["C",7], False) == True
+        assert G.coordsValidate(dim,["H",2]) == True
+        assert G.coordsValidate(dim,[4,5],True) == True
+        assert G.coordsValidate(dim,[0,0], True) == True
+        assert G.coordsValidate(dim,[7,7], True) == True
+        assert G.coordsValidate(dim,[0,0], True) == True
+        assert G.coordsValidate(dim,["R",2]) == False
+        assert G.coordsValidate(dim,["C",9]) == False
+        assert G.coordsValidate(dim,["C",22]) == False
+        assert G.coordsValidate(dim,["C",2], True) == False
+        assert G.coordsValidate(dim,["A",1], True) == False
+        assert G.coordsValidate(dim,[0,8],True) == False
+        assert G.coordsValidate(dim,[0,28]) == False
+        assert G.coordsValidate(dim,[8,2]) == False
+        assert G.coordsValidate(dim,[-33,8]) == False
+        assert G.coordsValidate(dim,["A",13], False) == False
 #CLI
 class TestCliClass(object):
     def test_gridRenderOnly(chapman):
@@ -120,6 +136,14 @@ class TestCliClass(object):
         assert g.posChecker(1,p2) == False
         assert g.posChecker(9,p2) == False
         assert g.posChecker(2,[["C",1],["D",1]]) == False
+        assert g.addShip( S.Ship("test",2), p2 ) == False
+        assert g.addShip( S.Ship("test",4), p2 ) == False
+        assert g.posChecker(0,p2) == True
+        assert g.addShip( S.Ship("test",3), p2 ) == True
+        assert g.posChecker(0,p2) == False
+        assert g.posChecker(0,[["A",1],["A",3],["a",2]]) == True
+        assert g.posChecker(0,[["A",1],["d",3],["a",2]]) == False
+        assert g.posChecker(0,[["C",3],["d",1]]) == False
     def test_gridShoot(palin):
         g = G.Grid(5)
         assert g.shoot(["B",21],0) == False
@@ -135,7 +159,39 @@ class TestCliClass(object):
         assert g.shoot(["E",3],2) == True 
     def test_gridRenderAndShoot(palin):
         g = G.Grid(10)
-        c = C.CLI()      
-        assert True
-        
-
+        c = C.CLI()
+        c.renderGrid(g,False,False)#c.print(g.slots,False) 
+        assert g.addShip(S.Ship("test",4), [["B",2],["B",3],["B",1],["B",4]]) == True
+        c.renderGrid(g,False,True)#c.print(g.slots,False)
+        assert g.shoot(["B",2],0) == True
+        c.renderGrid(g,True,False)#c.print(g.slots,False)
+        assert  g.shoot(["D",2],0) == True
+        c.renderGrid(g,False,False)#c.print(g.slots,False)
+        assert g.shoot(["B",3],0) == True
+        assert g.shoot(["B",1],0) == True
+        assert g.shoot(["B",1],0) == True
+        c.renderGrid(g,False,True)#c.print(g.slots,False)
+        assert g.shoot(["B",4],0) == True
+        c.renderGrid(g,False,False)#c.print(g.slots,False)
+        assert g.shoot(["C",4],0) == True
+        assert g.shoot(["C",4],0) == True
+        assert g.shoot(["A",4],0) == True
+        c.renderGrid(g,False,False)
+        assert g.shoot(["A",2],0) == True
+        assert g.shoot(["C",2],0) == True
+        assert g.addShip(S.Ship("test2",7), [["c",8],["f",8],["D",8],["B",8],["e",8],["g",8],["H",8]]) == True
+        c.renderGrid(g,False,False)
+        c.renderGrid(g,True,True)
+        assert g.shoot(["p",2],0) == False
+        assert g.shoot(["A",2],0) == True
+        assert g.shoot(["C",8],0) == True
+        assert g.shoot(["e",23],0) == False
+        assert g.shoot(["A",8],0) == True
+        assert g.shoot(["d",8],0) == True
+        assert g.shoot(["d",10],0) == True
+        c.renderGrid(g,False,True)
+        c.renderGrid(g,True,False)
+        for i in range(1,11):
+            assert g.shoot(["A",i],0) == True
+        c.renderGrid(g,False,False)
+        c.renderGrid(g,True,True)

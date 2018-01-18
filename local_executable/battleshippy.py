@@ -26,7 +26,8 @@ class Action(threading.Thread):
 ##            self.data=DataDb()
 ##        else:
 ##            self.data=DataFile()
-        self.players = players
+        self.me, self.enemy = players[index].name, players[1-index].name
+        self.isPC =  players[index].nature == "PC"
         #currentPlayer=0 #always start first in Players array (random choice in main)
         #self.turn = 1 #in one turn each player takes a shot
         #self.cv = cv
@@ -36,7 +37,7 @@ class Action(threading.Thread):
             vett.append(elem.ship,pos)
         return vett
     def getShipNamesAndCoord(self, shipsToGive, distance):
-        vett = self.ui.askAllShips(self.grids.dim, ships)
+        vett = self.ui.askAllShips(self.grids.dim, shipsToGive)
         if (vett==None):
             vett=[]
         else:
@@ -61,7 +62,7 @@ class Action(threading.Thread):
 ##        ownGrid, othersGrid = self.grids[self.index], self.grids[1-self.index]
 ##      UI = self.ui
      ##   UI.startSplash()
-        ## if (player.nature == "PC"):
+        ## if (self.isPC):
 ##                vett = self.computeShipNamesAndCoord( shipsToGive, 0)
        ##         ownGrid.shipsPositioning(vett) 
 ##            else: 
@@ -105,7 +106,7 @@ def initGame (side,players,uiMode):
     grids = [Gr.Grid(side), Gr.Grid(side)]
     players = [Pl.Player("andrea","HUMAN"),Pl.Player("computer", "PC")]
     seed()
-    l = [lambda x: x.reverse(), lambda x: None]
+    l = [lambda x: x[::-1], lambda x: x]
     choice(l)(players) #randomly choose which player will start (has index 0)
     return grids, players
 def updateGlobalStats(stats):

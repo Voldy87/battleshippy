@@ -1,7 +1,9 @@
+# python -m common.interface.cli
+
 from texttable import Texttable
 from colorama import init # call init() at start
 
-from common.game.grid import Grid
+from common.game.grid import Grid, coordsConvert as convert
 from common.interface.i_o import I_O
 #togliere questi sotto se nn faccio il test qui
 
@@ -25,7 +27,6 @@ class CLI:
             post = self.cliSquareMap['Shot'][1]
             if (highlightShot): #the slot i'm printing needs to be highlighted?
                 pre = self.cliSquareMap['Shot'][2]
-                print("HL")
             else:
                 pre = self.cliSquareMap['Shot'][0]
         if (what==0)or(not show_ships and shots==0):
@@ -36,7 +37,7 @@ class CLI:
     def renderGrid(self, grid, fullView, lastshotView): #var def have to go outisde gthis fun
         '''Show the grid on the console, with shoots and ships if present and desired:
             - grid to show
-            - view all ships or only hitten parts
+            - view all ships or only hit parts
             - highlight last shot or not
         '''
         dim = len(grid.slots)
@@ -46,16 +47,20 @@ class CLI:
         for x in range(0,dim): #each row after the header one (that has letters)
             temp = [x+1]
             for y in range(0,dim): #each column
-                highlightShot = (lastshotView) and ("coords" in grid.lastShotInfo) and (grid.lastShotInfo["coords"]==[x,y])
+                highlightShot = (lastshotView) and ("coords" in grid.lastShotInfo) and (grid.lastShotInfo["coords"]=={'x':x,'y':y})
                 temp.append(self.getSquareCode(grid.slots[x][y],fullView, highlightShot))
             rows.append(temp)
         t = Texttable(0) #(github.com/foutaise/texttable) "__init__(self, max_width=80) max_width is an integer, specifying the maximum width of the table if set to 0, size is unlimited, therefore cells won't be wrapped"
         t.add_rows(rows) #use a generator or something similar to avoid all this arrays...
         print(t.draw())
+    def coordString(self,coord,LetCol):
+        vett = convert(coord,False,LetCol)
+        return str(vett[0])+str(vett[1])
     def askAllShips(self,side,ships):
         return None
     def askSingleShip(self, side, ship): #ship is a ship class object
-        "Ask DIM positions for a single ship: only check that DIM positions are given"
+        """ Ask all the required positions for a single ship: only check that all positions are given:
+        returns the array with the inserted coordinates """
         dim = ship.length
         name = ship.name
         pointCoords = []
@@ -69,19 +74,19 @@ class CLI:
                     x = self.io.read()
                     if (65<=ord(x.upper())<=65+side-1):
                         break
-                    self.io.write("A letter in the range A-"+chr(65+dim-1)+", please")
+                    self.io.write("A letter in the range A-"+chr(65+side-1)+", please")
                 while True:
                     self.io.write("HORIZONTAL/ROW(number):")
                     y = self.io.read()
                     try:
                        y = int(y)
                     except ValueError:
-                       self.io.write ('A number, between 0 and '+ str(side) + " please")
+                       self.io.write ('A number, between 1 and '+ str(side) + " please")
                        continue
-                    if ( 0 <= y < side):
+                    if ( 0 < y <= side):
                         break
                     else:
-                        self.io.write ('A number between 0 and '+ str(side-1) + " please")
+                        self.io.write ('A number between 1 and '+ str(side) + " please")
                 pos = [x.upper(),y]
                 if pos not in pointCoords: 
                     pointCoords.append(pos)
@@ -89,70 +94,44 @@ class CLI:
                     self.io.write ('Already used position!')
                     flag= True
         return pointCoords   
-    def shotUpcome(self, shotInfo):
-        pos, shipId, shots = shotInfo.coords, shotInfo.self.slots[x][y][0], shotInfo.self.slots[x][y][1]
+    def shotUpcome(self, shotInfo, LetCol):
+        pos = shotInfo['coords']
+        shipId, shots = shotInfo['slot']
         if (not pos):
             return
-        self.io.write("Your shot to the "+str(pos.x)+"-"+str(pos.y)+" position ")  
+        string = "Your shot to the "+ self.coordString([pos['x'],pos['y']],LetCol)+" position "
         if (shipId==0):
-            self.io.write("has hit the sea!")
+            string += "has hit the sea!"
         else:
-            self.io.write("has hit a ship, ")
+            string += "has hit a ship"
             if (shots==-1):
-                self.io.write("sinking it!!")
-            elif (shots>0):
-                self.io.write(" but you had already hit it in this position!")
-        if (shotInfo.allSinked):
-            self.io.write("In addition, this was the last ship of your enemy!")
-
+                string += ", sinking it"
+            elif (shots>1):
+                string += ", but you had already hit it in this position"
+        if (shotInfo['allSinked']):
+            string += " and, in addition, this was the last ship of your enemy!"
+        self.io.write(string)
 if ( __name__ == "__main__"):
     dim = 4
-    g = Grid(dim)
+    shiplen = 2
     c = CLI()
-    c.renderGrid(g,False,False)#c.print(g.slots,False) 
-    s = Ship("cargo",4)
-    res = g.addShip(s, [["B",2],["B",3],["B",1],["B",4]])
-    print(res)
-    c.renderGrid(g,False,True)#c.print(g.slots,False)
-    g.shoot(["B",2],0)
-    c.renderGrid(g,True,False)#c.print(g.slots,False)
-    g.shoot(["D",2],0)
-    c.renderGrid(g,False,False)#c.print(g.slots,False)
-    g.shoot(["B",3],0)
-    g.shoot(["B",1],0)
-    g.shoot(["B",1],0)
-    c.renderGrid(g,False,True)#c.print(g.slots,False)
-    g.shoot(["B",4],0)
-    c.renderGrid(g,False,False)#c.print(g.slots,False)
-    g.shoot(["C",4],0)
-    g.shoot(["C",4],0)
-    g.shoot(["A",4],0)
-    c.renderGrid(g,False,False)
-    g.shoot(["A",2],0)
-    g.shoot(["C",2],0)
-    c.renderGrid(g,False,False)
-    c.renderGrid(g,True,True)
-    #c.print(g.slots,False)
-    gg = Grid(dim+2)
-    lim = 1
-    row1 = [["B",2],["B",1],["B",3]]
-    #print(gg.posChecker(lim,row1))
-    ss = Ship("submarine",3)
-    tt = Ship("submarine",3)
-    gg.addShip(ss,row1)
-##    print(gg.posChecker(lim,[["B",1],["B",3],["B",2]]))
-    row2 = [["B",5],["C",5], ["A",5]]
-    gg.addShip(tt,row2)
-    print(gg.posChecker(lim,row2))
-    
-    #gg.addShip(ss,row2)
-##    print(gg.posChecker(lim,[["C",2],["D",2],["B",2]]))
-##    print(gg.posChecker(lim,[["A",2],["D",2]]))
-##    print(gg.posChecker(lim,[["A",2],["A",4],["A",3],["A",1]]))
-##    print(gg.posChecker(lim,[[12,2],["2",2],[0,2]]))
-##    print(gg.posChecker(lim,[["C",1],["B",3],["A",2]]))
-    c.renderGrid(gg,True,False)#c.print(gg.slots,False)
-    gg.shoot(["D",4],1)
+    gg = Grid(dim)
     c.renderGrid(gg,True,True)
-    zz = Ship("submarine",3)
-    print(c.askSingleShip(dim+2,zz))
+    z = Ship("submarine",shiplen)
+    pos = c.askSingleShip(dim,z)
+    if gg.posChecker(10,pos):
+        gg.addShip(z,pos)
+    c.renderGrid(gg,True,True)
+    zz = Ship("submarine",shiplen)
+    pos2 = c.askSingleShip(dim,zz)
+    if gg.posChecker(0,pos2):
+        gg.addShip(zz,pos2)
+    c.renderGrid(gg,True,True)
+    for i in pos:
+        gg.shoot(i,0)
+        c.renderGrid(gg,True,True)
+        c.shotUpcome(gg.lastShotInfo, gg.letCol)
+    for i in pos2:
+        gg.shoot(i,0)
+        c.shotUpcome(gg.lastShotInfo, gg.letCol)
+    c.renderGrid(gg,True,True)
