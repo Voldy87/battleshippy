@@ -1,6 +1,9 @@
 from math import sqrt
-from random import seed,choice,randint
 from numpy import sign
+from random import seed,choice,randint
+#togliere sotto se test ok
+from common.game.grid import Grid
+from common.game.ship import Ship
 
 def squaresBetween(start,end):
     '''Generate all coordinates between two cells, using the double 0-indexed notation both for input and output'''
@@ -13,8 +16,9 @@ def squaresBetween(start,end):
         coordinates.append(temp)
     return coordinates 
 def validSquares(obj,matrix):
-    '''Compute the neighboring cells around a series of shots on a ship (at least 1)'''
-    side = int(sqrt(len(matrix)))
+    '''Compute the neighboring cells around a series of shots on a ship (at least 1)
+     using double 0-indexed lists'''
+    side = len(matrix)
     x = obj[0][0]
     y = obj[0][1]
     neighbors=[] #return a list of [x,y] lists (coords)
@@ -23,10 +27,10 @@ def validSquares(obj,matrix):
             [x2, y2]
             for x2 in range(x-1, x+2)
             for y2 in range(y-1, y+2)
-            if all([ ((0<=x2<side)and(0<=y2<side)),
-                     abs(complex(x2-x,y2-y))<sqrt(2),
-                     matrix[x][y][1]==0,
-                     (x2!=x or y2!=y)]
+            if ( ((0<=x2<side)and(0<=y2<side)) and
+                     #abs(complex(x2-x,y2-y))<sqrt(2),
+                     matrix[x2][y2][1]==0 and
+                     (x2!=x or y2!=y)
                    )
         ]
         return neighbors(x,y)
@@ -39,8 +43,8 @@ def validSquares(obj,matrix):
             if (yDw>=0 and matrix[x][yDw][1]==0):
                 neighbors.append([x,yDw])
         elif (y==obj[1][1]): #hit ship is placed horizontally (common ordinate)
-            xRt = +1+max(obj,key=lambda palin : palin[0])
-            xLt = -1+min(obj,key=lambda chapman : chapman[0])
+            xRt = +1+max(obj,key=lambda palin : palin[0])[0]
+            xLt = -1+min(obj,key=lambda chapman : chapman[0])[0]
             if (xRt<side and matrix[xRt][y][1]==0):
                 neighbors.append([xRt,y])
             if (xLt>=0 and matrix[xLt][y][1]==0):
@@ -67,7 +71,7 @@ class Player:
         switch[strategy](slots)
     def basicAIshot(self,slots):
         seed()
-        side = int(sqrt(len(slots)))
+        side = len(slots)
         if (self.lastGoodShots):# current slot is a ship hit(not sunk)
             shootables = validSquares(self.lastGoodShots, slots )
             return choice(shootables)
@@ -78,7 +82,7 @@ class Player:
         '''Insert ship in free map spaces respecting the distance, choosing an algorithm'''
         switch = {"basic":self.basicAIship}
         endpoint = switch[strategy](shipLen,distance,slots)
-        return squaresBetween(endpoint[0],endpoint[0])    
+        return squaresBetween(endpoint[0],endpoint[1])    
     def basicAIship(self,shipLen,shipMinDistance,slots):
         '''Randomly find space for a ship, returning endpoints coordinates'''
         seed() #in program main?
@@ -89,18 +93,18 @@ class Player:
             xS = randint(0,dim-1)
             yS = randint(0,dim-1)
             #print(str(xS)+" "+str(yS))
+            #print(slots[xS][yS])
             if slots[xS][yS][0]!=0: #starting slot is free?
                 continue
             mul = choice(tuple(([-1,0],[+1,0],[0,-1],[0,+1]))) #choose direction ('NSWE')
             xE = xS + mul[0]*(shipLen-1)
             yE = yS + mul[1]*(shipLen-1)
-            if all ([ xE in range(0,dim) , yE in range(0,dim) , slots[xE][yE][0]==0 ]) : #in this direction the endof the ship exists free 
+            if( xE in range(0,dim) and yE in range(0,dim) and slots[xE][yE][0]==0 ) : #in this direction the endof the ship exists free 
                 flag = False
-                if mul[0]==0:
-                    step=1
-                else:
+                step=1
+                if mul[0]!=0:
                     step=mul[0]
-                for i in range( xS+mul[0], xE+1+mul[0]*(shipMinDistance), step ):
+                for i in range( xS+mul[0], xE+mul[0]*(shipMinDistance+1), step ):
                     if (slots[i][yE][0]!=0):
                         flag = True
                         break
@@ -108,7 +112,7 @@ class Player:
                     step=1
                 else:
                     step=mul[1]
-                for i in range( yS+mul[1], yE+1+mul[1]*(shipMinDistance), step ):
+                for i in range( yS+mul[1], yE+mul[1]*(shipMinDistance+1), step ):
                     if (slots[xE][i][0]!=0):
                         flag = True
                         break
@@ -117,10 +121,10 @@ class Player:
         return False
                             
 if ( __name__ == "__main__"):
-    print(squaresBetween([22,0],[12,0]))
 ##    d = [ [[11,0] ,[1,0] ,[0,0] ,[0,1]] ,[[3,0] ,[4,0] ,[2,0] ,[0,-1]] ,[[0,10] ,[166,0] ,[0,2] , [111,1]] ,[[0,0] ,[1,1] ,[0,-2] ,[1,0]] ]
 ##    c = [ [[10,0] ,[10,0] ,[10,0] ,[10,0]] ,[[10,0] ,[10,0] ,[10,0] ,[10,0]] ,[[10,0] ,[10,0] ,[10,0] , [0,0]] ,[[10,0] ,[10,0] ,[10,0] ,[0,0]] ]
-##    p = Player("ai","gianni")
+    p = Player("ai","gianni")
+    g = Grid(4)
 ##    for i in range(0,0):
 ##        print("void")
 ##        print(p.computerTarget(c,"basic"))
@@ -132,5 +136,6 @@ if ( __name__ == "__main__"):
 ##        print("ship hit at 1,1 and 1,2")
 ##        print(p.computerTarget(c,"basic"))
 ##        print("\n")
-##    for i in range(0,35):
-##        print(p.computerShip(2,"basic",0,c))
+    g.addShip(Ship("test",2),[["A",1],["a",2]])
+    for i in range(0,35):
+        print(p.computerShip(3,"basic",0,g.slots))

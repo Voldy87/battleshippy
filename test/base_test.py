@@ -4,6 +4,8 @@ from common.game import grid as G, ship as S, player as P
 import common.interface.cli as C
 
 import pytest
+from operator import itemgetter
+
 
 #test that pytest works !
 def func(x):
@@ -25,7 +27,44 @@ class TestPlayerClassAndUtils(object):
         assert P.squaresBetween([40,23],[45,23])== [[40,23],[41,23],[42,23],[43,23],[44,23],[45,23]]
         assert P.squaresBetween([2,9],[9,9])== [[2,9],[3,9],[4,9],[5,9],[6,9],[7,9],[8,9],[9,9]]
         assert P.squaresBetween([22,99],[18,9])== [[22,99],[21,99],[20,99],[19,99],[18,99]]
-        
+    def test_validSquares(jones):
+        g = G.Grid(6)
+        pos = ["C",3]
+        assert g.shoot(pos) == True
+        pos = G.coordsConvert(pos) #[2,2]
+        assert sorted(P.validSquares([pos],g.slots),key=itemgetter(0)) == sorted([[1,1],[1,2],[1,3], [2,1],[2,3],[3,1],[3,2],[3,3]],key=itemgetter(0))
+        g = G.Grid(6)
+        pos = ["A",2]
+        assert g.shoot(pos) == True
+        pos = G.coordsConvert(pos) #[1,0]
+        assert sorted(P.validSquares([pos],g.slots),key=itemgetter(0)) == sorted([[0,0],[0,1],[1,1], [2,0],[2,1]],key=itemgetter(0))
+        pos2 = ["A",1]
+        assert g.shoot(pos2) == True
+        pos2 = G.coordsConvert(pos2) #[0,0]
+        assert sorted(P.validSquares([pos,pos2],g.slots),key=itemgetter(0)) == [[2,0]]
+        pos3 = ["F",4]
+        assert g.shoot(pos3) == True
+        pos3 = G.coordsConvert(pos3) #[3,5]
+        assert sorted(P.validSquares([pos3],g.slots),key=itemgetter(0)) == sorted([[2,4],[2,5], [3,4],[4,4],[4,5]],key=itemgetter(0))
+        pos4, pos5 = ["d",3],["D",4] #[2,3], [3,3]
+        assert g.shoot(pos4) == True
+        assert g.shoot(pos5) == True
+        pos4, pos5 = G.coordsConvert(pos4),G.coordsConvert(pos5)
+        assert sorted(P.validSquares([pos4,pos5],g.slots),key=itemgetter(0)) == [[1,3],[4,3]]
+        pos4, pos5 = ["e",2],["d",2] #[1,4], [1,3]
+        assert g.shoot(pos4) == True
+        assert g.shoot(pos5) == True
+        pos4, pos5 = G.coordsConvert(pos4),G.coordsConvert(pos5)
+        assert sorted(P.validSquares([pos4,pos5],g.slots),key=itemgetter(1)) == [[1,2],[1,5]]
+    def test_basicAIshot(gilliam):
+        g = G.Grid(2)
+        pp = P.Player("ai","gianni")
+        assert pp.basicAIshot(g.slots) in [[0,0],[0,1],[1,0],[1,1]]
+        g.shoot(["A",1])
+        assert pp.basicAIshot(g.slots)!=[0,0]
+        g.shoot(["b",2])
+        assert pp.basicAIshot(g.slots)!=[1,1]
+        assert pp.basicAIshot(g.slots)!=[0,0]
 # SHIP
 class TestShipClass(object):
     def test_constructor(idle):
@@ -85,6 +124,9 @@ class TestCliClass(object):
         assert g.addShip( S.Ship("cargo",5), [["B",2],["B",3],["B",1],["B",4]] ) == False
         assert g.addShip( S.Ship("cargo",4), [["W",2],["B",3],["B",1],["B",4]] ) == False
         assert g.addShip( S.Ship("cargo",4), [["A",2],["B",3],["B",1],["B",4]] ) == True #addShip does not check space continguity or freedom
+        assert g.slots[0][1] == [1,0]
+        assert g.slots[2][1] == [1,0]
+        assert g.slots[3][1] == [1,0]
         c.renderGrid(g,True,False)
         g = G.Grid(10)
         assert g.addShip( S.Ship("cargo",4), [["B",2],["B",3],["B",1],["B",4]] ) == True

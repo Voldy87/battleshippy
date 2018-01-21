@@ -13,7 +13,7 @@ __version__=  '1.0'
 import time, sys #all?
 
 class I_O:
-    def __init__(self,inpuType="stdin", outpuType="stdout"):
+    def __init__(self, inpuType="stdin", outpuType="stdout", **options):
         """
 
         Set default attribute values 
@@ -21,10 +21,12 @@ class I_O:
         Keyword arguments:
         inpuType -- type of input
         outpuType -- type of input
+        options -- dictionary containing other keywords
         
         """
         self.inType = inpuType
         self.outType = outpuType
+        #use options to do other operations if needed (e.g. create sockets, create self.params for the functions, etc.), t
     def stdIn_cli__loading(interval): #percentual loading with ANSI escape codes
         print ("Loading...")
         for i in range(0, 100):
@@ -55,7 +57,7 @@ class I_O:
         return line
     def stdIn_tkinter(self):
         pass
-    def writeSocket(self, data):
+    def writeSocket(self, data): #internalli uses self.options
         pass
     def readSocket(self):
         pass

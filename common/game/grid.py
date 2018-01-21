@@ -1,7 +1,7 @@
 from operator import itemgetter
 
 #from ship import Ship
-def coordsValidate(dim,vett,OnlyNum=False):
+def coordsValidate(dim:int,vett:list,OnlyNum:bool=False)->bool:
     '''Validate, for the given grid, a couple of coordinates (2nd argument) in one of the two
     possibile formats, letter+number or two numbers, decided by the 3rd argument); this function,
 does not care of how coordinates refers to row and columns (unless the grid is square)'''
@@ -18,7 +18,7 @@ does not care of how coordinates refers to row and columns (unless the grid is s
         if ( (letterAscii not in range(65,65+dim)) or (number not in range(1,dim+1)) ):
             return False
         return True
-def coordsConvert(vett,ToNum=True, LetCol=True): #to extend using class argument to locate alpahbet used for letter (now default A-Z)
+def coordsConvert(vett:list,ToNum:bool=True, LetCol:bool=True)->list: #to extend using class argument to locate alpahbet used for letter (now default A-Z)
     '''Convert coordinates for the given grid between two formats
     - AlphaNumeric  (letter + integer >0 intepreted as Col/Rig or viceversa, decided by 4th arg e.g. C3)
     - Numeric (double 0-indexed matrix, e.g. [2][0])
@@ -47,6 +47,7 @@ class Grid(SeaMap) :
         self.letCol = LetCol
         self.void = True
         self.lastShotInfo = dict()
+        self.lastAreaShotInfo = []
         self.ships = []
     def clear():
         pass
@@ -56,7 +57,8 @@ class Grid(SeaMap) :
         else:
             return False
     def posChecker (self, distance, AlphaNumPositions):
-        '''Check is a set of positions for a ship is acceptable, giving a distance from other ships'''
+        '''Check is a set of positions for a ship is acceptable, giving a distance from other ships,
+        using alphanumerical input coordinates'''
         num = len(AlphaNumPositions)
         if (num==0):
             return True
@@ -109,16 +111,16 @@ class Grid(SeaMap) :
         if False in coords: #never fails as the coords validity is checked before invoking this function
             return False
         self.ships.append(vessel)
-        shipIndex = len(self.ships)-1
+        shipIndex = len(self.ships)
         for [x,y] in coords:
-            self.slots[x][y] = [shipIndex+1,0]
+            self.slots[x][y] = [shipIndex,0]
         self.void = False
         return True
     def shipsPositioning(self,vett):
         for spam in vett:
             self.addShip(spam) #spam = ship,pos
     def takeShot(self,coord):
-        '''Modify the grid slot matrix using the 0-index couple of coordinates'''
+        '''Modify the grid slot matrix using a 0-index couple of coordinates'''
         x = coord[0]
         y = coord[1]
         shipID = self.slots[x][y][0]
@@ -136,21 +138,23 @@ class Grid(SeaMap) :
                             self.slots[xx][yy][1] = -1
         self.lastShotInfo = {"coords":{"x":x,"y":y}, "slot":self.slots[x][y], "allSinked":self.allSinked()}
         return True;
-    def shoot(self,coord,radius):
+    def shoot(self,coord,radius=0):
         '''Launch a shoot (area effect if 3rd arg >0) centered to the given coordinate'''
         if (radius<0):
             return False
+        self.lastAreaShotInfo = [] #both in case of single (remains void) or area (new array of lastshotinfo) this var needs to be voided
         pos = self.coordsValidateAndConvert(coord)
         if (not pos):
             return False
         if (radius==0):
             self.takeShot(pos)
-        else:
+        else: #area shot
             for x in range(-radius,radius+1):
                 for y in range(-radius,radius+1):
                     target = [ pos[0]+x , pos[1]+y ]
                     if (coordsValidate(self.dim,target,True)):
                         self.takeShot(target)
+                        self.lastAreaShotInfo.append(self.lastShotInfo)
         return True
     def sinkedShips(self):
         return list(filter(lambda x : x.sinked==True, self.ships))

@@ -36,7 +36,7 @@ class Action(threading.Thread):
             coords = self.players[self.index].computerShip(elem.dim,distance,grids[self.index])
             vett.append(elem.ship,pos)
         return vett
-    def getShipNamesAndCoord(self, shipsToGive, distance):
+    def getShipNamesAndCoord(self, distance, *shipsToGive):
         vett = self.ui.askAllShips(self.grids.dim, shipsToGive)
         if (vett==None):
             vett=[]
