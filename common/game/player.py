@@ -63,6 +63,22 @@ class Player:
         self.lastGoodShots.insert(0,[x,y])
     def reactToSink(self):
         self.lastGoodShots = []
+    def reactToShot(self,shotInfo):
+        x, y = shotInfo["coords"]["x"], shotInfo["coords"]["y"]
+        shipId, shotNum =  shotInfo["slot"]
+        if shipId==0:
+            return "MISS"
+        elif shotNum==1:
+            self.reactToHit(x,y)
+            return "FIRST_HIT"
+        elif shotNum>1:
+            self.reactToHit(x,y)
+            return "ALREADY_HIT"
+        elif shotNum==-1:
+            self.reactToSink()
+            return "JUST_SINKED"
+        elif shotNum<-1:
+            return "ALREADY_SINKED"
     def humanTarget():
         pass
     def computerTarget(self,slots,strategy):

@@ -5,6 +5,7 @@ import common.interface.cli as C
 
 import pytest
 from operator import itemgetter
+from random import seed,randint
 
 
 #test that pytest works !
@@ -56,6 +57,30 @@ class TestPlayerClassAndUtils(object):
         assert g.shoot(pos5) == True
         pos4, pos5 = G.coordsConvert(pos4),G.coordsConvert(pos5)
         assert sorted(P.validSquares([pos4,pos5],g.slots),key=itemgetter(1)) == [[1,2],[1,5]]
+    def test_reactToShot(cleese):
+        seed()
+        dim = randint(4,25)
+        pp = P.Player("ai","test")
+        for letter in list(map(chr, range(65, 65+dim))):
+            g = G.Grid(dim)
+            for i in range(1,7):
+                g.shoot([letter,i])
+                assert pp.reactToShot(g.lastShotInfo) == "MISS"
+            for i in range(1,100):
+                g.shoot(G.randomCoord(dim,False,True))
+                assert pp.reactToShot(g.lastShotInfo) == "MISS"
+            g.addShip( S.Ship("cargo",4), [[letter,1],[letter,2],[letter,3],[letter,4]] )
+            for i in range(1,4):
+                g.shoot([letter,i])
+                assert pp.reactToShot(g.lastShotInfo) == "FIRST_HIT"
+            for i in range(1,4):
+                g.shoot([letter,i])
+                assert pp.reactToShot(g.lastShotInfo) == "ALREADY_HIT"
+            g.shoot([letter,4])
+            assert pp.reactToShot(g.lastShotInfo) == "JUST_SINKED"
+            for i in range(1,5):
+                g.shoot([letter,i])
+                assert pp.reactToShot(g.lastShotInfo) == "ALREADY_SINKED"
     def test_basicAIshot(gilliam):
         g = G.Grid(2)
         pp = P.Player("ai","gianni")
@@ -65,10 +90,34 @@ class TestPlayerClassAndUtils(object):
         g.shoot(["b",2])
         assert pp.basicAIshot(g.slots)!=[1,1]
         assert pp.basicAIshot(g.slots)!=[0,0]
+        g = G.Grid(2)
+        g.shoot(["A",1])
+        assert pp.reactToShot(g.lastShotInfo) == "MISS"
+        g.shoot(["A",2])
+        assert pp.reactToShot(g.lastShotInfo) == "MISS"
+        g.shoot(["B",1])
+        assert pp.reactToShot(g.lastShotInfo) == "MISS"
+        assert pp.basicAIshot(g.slots)==[1,1]
+        g = G.Grid(4)
+        assert g.addShip( S.Ship("cargo",4), [["B",2],["B",3],["B",1],["B",4]] ) == True
+        g.shoot(["B",2])
+        assert pp.reactToShot(g.lastShotInfo) == "FIRST_HIT"
+        g.shoot(["B",3])
+        assert pp.reactToShot(g.lastShotInfo) == "FIRST_HIT"
+        temp = pp.basicAIshot(g.slots)
+        assert temp==[3,1] or temp==[0,1]
+        g.shoot(["B",1])
+        assert pp.reactToShot(g.lastShotInfo) == "FIRST_HIT"
+        assert pp.basicAIshot(g.slots)==[3,1]
+        g.shoot(["B",4])
+        assert pp.reactToShot(g.lastShotInfo) == "JUST_SINKED"
 # SHIP
 class TestShipClass(object):
     def test_constructor(idle):
         assert str(S.Ship("cargo",3)) == "cargo: 3 long, hit 0 times"
+        assert str(S.Ship("submarine",7)) == "submarine: 7 long, hit 0 times"
+        assert str(S.Ship("test",4)) == "test: 4 long, hit 0 times"
+
 # GRID  
 class TestGridClassAndUtils(object):
     def test_coordsConvert(gilliam):

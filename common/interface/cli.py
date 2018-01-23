@@ -97,17 +97,19 @@ class CLI:
     def shotUpcome(self, shotInfo, LetCol):
         pos = shotInfo['coords']
         shipId, shots = shotInfo['slot']
-        if (not pos):
+        if not pos:
             return
         string = "Your shot to the "+ self.coordString([pos['x'],pos['y']],LetCol)+" position "
-        if (shipId==0):
+        if shipId==0:
             string += "has hit the sea!"
         else:
             string += "has hit a ship"
-            if (shots==-1):
+            if shots==-1:
                 string += ", sinking it"
-            elif (shots>1):
+            elif shots>1:
                 string += ", but you had already hit it in this position"
+            elif shots<-1:
+                string += "but it was already sinked"
         if (shotInfo['allSinked']):
             string += " and, in addition, this was the last ship of your enemy!"
         self.io.write(string)

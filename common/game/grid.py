@@ -1,4 +1,5 @@
 from operator import itemgetter
+from random import seed,randint
 
 #from ship import Ship
 def coordsValidate(dim:int,vett:list,OnlyNum:bool=False)->bool:
@@ -31,12 +32,27 @@ def coordsConvert(vett:list,ToNum:bool=True, LetCol:bool=True)->list: #to extend
     else:
         l[index](vett)
         return [ chr(vett[0]+65).upper() , vett[1]+1  ] #e.g. [1,0] => ["A",2]
-    
+def randomCoord(dim:int, Num:bool, LetCol:bool)->list:
+    '''Return a random coordinate,mainly for testing purpose'''
+    seed()
+    x = randint(0,dim-1)
+    y = randint(0,dim-1)
+    if Num :
+        return [x,y]
+    else:
+        return coordsConvert([x,y],False,LetCol)
+
 class SeaMap :
     def __init__ (self, dim): #in future a rectangular grid??
-        ''' Constructor for this class. Only square side needed.'''
+        ''' Constructor for this class. Only square side needed.
+            - dim (positive integer): side of the square grid (has dim^2 slots)
+            - slots matrix (list of list):
+                - [0,n>0] empty slot hit n times before (also 0);
+                - [id>0,n] slot with ship id hit n times before (if n<0 sinked ship hit |n| times in this slot)'''
+        if dim<=0 :
+            raise Exception('Non-positive length')
         self.dim = dim
-        self.slots = [ [[0,0] for x in range(dim)] for y in range(dim) ] # [0,n] empty slot hit n times before (also 0); [id,n] slot with ship id hit n times before (if n==-1 sinked ship)
+        self.slots = [ [[0,0] for x in range(dim)] for y in range(dim) ] 
         #print("Created grid with " + str(dim**2) + " squares")
 
 class Grid(SeaMap) :
@@ -129,8 +145,8 @@ class Grid(SeaMap) :
         if (shipID == 0): # no ship in slot
             pass
         else:   # a ship is placed in this slot   
-            if (shotsNum<0): #there was a ship here, but it was already sinked when it got this shot
-                self.slots[x][y][1] = -1
+            if (shotsNum<0): #there was a ship here, but it was already sinked when it took this shot
+                self.slots[x][y][1] = shotsNum-1
             elif (shotsNum==0 and self.ships[shipID-1].getShot()): # just sinked the ship!
                 for xx in range(0,self.dim):
                     for yy in range(0,self.dim):
