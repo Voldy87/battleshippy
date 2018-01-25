@@ -1,6 +1,7 @@
 #   RUN python -m pytest -vs  IN THE TEST DIR
 
 from common.game import grid as G, ship as S, player as P
+from common.utils.grid import *
 import common.interface.cli as C
 
 import pytest
@@ -20,43 +21,51 @@ def test_exceptions():
         f()
 # PLAYER
 class TestPlayerClassAndUtils(object):
+    def test_squaresDistance(cleese):
+        for i in range(0,1000):
+            assert squaresDistance(0,0,0,i)==i
+            assert squaresDistance(0,0,i,0)==i
+            assert squaresDistance(i,i,i,i)==0
+            assert squaresDistance(i,0,0,0)==i
+            assert squaresDistance(0,i,0,0)==i
+            assert squaresDistance(0,0,0,0)==0
     def test_squaresBetween(idle):
-        assert P.squaresBetween([0,3],[0,8])== [[0,3],[0,4],[0,5],[0,6],[0,7],[0,8]]
-        assert P.squaresBetween([0,8],[0,2])== [[0,8], [0,7], [0,6],[0,5],[0,4],[0,3],[0,2]]
-        assert P.squaresBetween([2,13],[2,9])== [[2,13],[2,12],[2,11],[2,10],[2,9],]
-        assert P.squaresBetween([1,3],[2,3])== [[1,3],[2,3]]
-        assert P.squaresBetween([40,23],[45,23])== [[40,23],[41,23],[42,23],[43,23],[44,23],[45,23]]
-        assert P.squaresBetween([2,9],[9,9])== [[2,9],[3,9],[4,9],[5,9],[6,9],[7,9],[8,9],[9,9]]
-        assert P.squaresBetween([22,99],[18,9])== [[22,99],[21,99],[20,99],[19,99],[18,99]]
+        assert squaresBetween([0,3],[0,8])== [[0,3],[0,4],[0,5],[0,6],[0,7],[0,8]]
+        assert squaresBetween([0,8],[0,2])== [[0,8], [0,7], [0,6],[0,5],[0,4],[0,3],[0,2]]
+        assert squaresBetween([2,13],[2,9])== [[2,13],[2,12],[2,11],[2,10],[2,9],]
+        assert squaresBetween([1,3],[2,3])== [[1,3],[2,3]]
+        assert squaresBetween([40,23],[45,23])== [[40,23],[41,23],[42,23],[43,23],[44,23],[45,23]]
+        assert squaresBetween([2,9],[9,9])== [[2,9],[3,9],[4,9],[5,9],[6,9],[7,9],[8,9],[9,9]]
+        assert squaresBetween([22,99],[18,9])== [[22,99],[21,99],[20,99],[19,99],[18,99]]
     def test_validSquares(jones):
         g = G.Grid(6)
         pos = ["C",3]
         assert g.shoot(pos) == True
-        pos = G.coordsConvert(pos) #[2,2]
-        assert sorted(P.validSquares([pos],g.slots),key=itemgetter(0)) == sorted([[1,1],[1,2],[1,3], [2,1],[2,3],[3,1],[3,2],[3,3]],key=itemgetter(0))
+        pos = coordsConvert(pos) #[2,2]
+        assert sorted(validSquares([pos],g.slots),key=itemgetter(0)) == sorted([[1,1],[1,2],[1,3], [2,1],[2,3],[3,1],[3,2],[3,3]],key=itemgetter(0))
         g = G.Grid(6)
         pos = ["A",2]
         assert g.shoot(pos) == True
-        pos = G.coordsConvert(pos) #[1,0]
-        assert sorted(P.validSquares([pos],g.slots),key=itemgetter(0)) == sorted([[0,0],[0,1],[1,1], [2,0],[2,1]],key=itemgetter(0))
+        pos = coordsConvert(pos) #[1,0]
+        assert sorted(validSquares([pos],g.slots),key=itemgetter(0)) == sorted([[0,0],[0,1],[1,1], [2,0],[2,1]],key=itemgetter(0))
         pos2 = ["A",1]
         assert g.shoot(pos2) == True
-        pos2 = G.coordsConvert(pos2) #[0,0]
-        assert sorted(P.validSquares([pos,pos2],g.slots),key=itemgetter(0)) == [[2,0]]
+        pos2 = coordsConvert(pos2) #[0,0]
+        assert sorted(validSquares([pos,pos2],g.slots),key=itemgetter(0)) == [[2,0]]
         pos3 = ["F",4]
         assert g.shoot(pos3) == True
-        pos3 = G.coordsConvert(pos3) #[3,5]
-        assert sorted(P.validSquares([pos3],g.slots),key=itemgetter(0)) == sorted([[2,4],[2,5], [3,4],[4,4],[4,5]],key=itemgetter(0))
+        pos3 = coordsConvert(pos3) #[3,5]
+        assert sorted(validSquares([pos3],g.slots),key=itemgetter(0)) == sorted([[2,4],[2,5], [3,4],[4,4],[4,5]],key=itemgetter(0))
         pos4, pos5 = ["d",3],["D",4] #[2,3], [3,3]
         assert g.shoot(pos4) == True
         assert g.shoot(pos5) == True
-        pos4, pos5 = G.coordsConvert(pos4),G.coordsConvert(pos5)
-        assert sorted(P.validSquares([pos4,pos5],g.slots),key=itemgetter(0)) == [[1,3],[4,3]]
+        pos4, pos5 = coordsConvert(pos4),coordsConvert(pos5)
+        assert sorted(validSquares([pos4,pos5],g.slots),key=itemgetter(0)) == [[1,3],[4,3]]
         pos4, pos5 = ["e",2],["d",2] #[1,4], [1,3]
         assert g.shoot(pos4) == True
         assert g.shoot(pos5) == True
-        pos4, pos5 = G.coordsConvert(pos4),G.coordsConvert(pos5)
-        assert sorted(P.validSquares([pos4,pos5],g.slots),key=itemgetter(1)) == [[1,2],[1,5]]
+        pos4, pos5 = coordsConvert(pos4),coordsConvert(pos5)
+        assert sorted(validSquares([pos4,pos5],g.slots),key=itemgetter(1)) == [[1,2],[1,5]]
     def test_reactToShot(cleese):
         seed()
         dim = randint(4,25)
@@ -67,7 +76,7 @@ class TestPlayerClassAndUtils(object):
                 g.shoot([letter,i])
                 assert pp.reactToShot(g.lastShotInfo) == "MISS"
             for i in range(1,100):
-                g.shoot(G.randomCoord(dim,False,True))
+                g.shoot(randomCoord(dim,False,True))
                 assert pp.reactToShot(g.lastShotInfo) == "MISS"
             g.addShip( S.Ship("cargo",4), [[letter,1],[letter,2],[letter,3],[letter,4]] )
             for i in range(1,4):
@@ -81,6 +90,46 @@ class TestPlayerClassAndUtils(object):
             for i in range(1,5):
                 g.shoot([letter,i])
                 assert pp.reactToShot(g.lastShotInfo) == "ALREADY_SINKED"
+    def test_basicAIshipWithoutDistance(jones):
+        g = G.Grid(9)
+        pp = P.Player("ai","gianni")
+        assert pp.basicAIship(3, 0, g.slots) != False 
+        for letter in ("a","B","c","D"):
+            positions = [[letter,1],[letter,2],[letter,3],[letter,4]]
+            g = G.Grid(9)
+            g.addShip( S.Ship("testship",4), positions )
+            for i in range (10,1000):
+                assert pp.basicAIship(i, 0, g.slots) == False
+            for i in range(1,1000):    
+                assert pp.basicAIship(5, 0, g.slots) != positions
+        g = G.Grid(4)
+        g.addShip( S.Ship("testship",4), [["c",1],["C",4],["c",3],["C",2]] )
+        g.addShip( S.Ship("testship",4), [["b",1],["b",4],["B",3],["B",2]] )
+        g.addShip( S.Ship("testship",4), [["A",1],["A",4],["A",2],["a",1]] )
+        for i in range(5,100,3):
+            assert pp.basicAIship(i, 0, g.slots) == False
+        for i in range(2,5):
+            assert pp.basicAIship(i, 0, g.slots) != False
+        assert sorted(pp.basicAIship(4, 0, g.slots)) == sorted([[0,3],[3,3]])
+        g.clear()
+        g.addShip( S.Ship("testship",4), [["a",1],["b",1],["c",1],["D",1]] )
+        for i in range(2,5):
+            assert pp.basicAIship(i, 0, g.slots) != False
+        g.addShip( S.Ship("testship",3), [["a",2],["A",3],["a",4]] )
+        assert pp.basicAIship(3, 0, g.slots) != False
+        g.addShip( S.Ship("testship",3), [["B",2],["b",3],["c",4]] )
+        g.addShip( S.Ship("testship",3), [["C",2],["c",3],["C",4]] )
+        assert sorted(pp.basicAIship(3, 0, g.slots)) == sorted([[1,3],[3,3]])
+        g.addShip( S.Ship("testship",3), [["B",2],["b",3],["c",4]] )
+        for i in range(5,5):
+            assert pp.basicAIship(i, 0, g.slots) == False
+    def test_basicAIshipWithDistance(jones):
+        g = G.Grid(4)
+        pp = P.Player("ai","gianni")
+        g.addShip( S.Ship("testship",4), [["a",1],["b",1],["c",1],["D",1]] )
+        for i in range(2,1000):
+            assert pp.basicAIship(i, 4, g.slots) == False
+        #assert sorted(pp.basicAIship(4, 2, g.slots)) == sorted([[3,0],[3,3]])
     def test_basicAIshot(gilliam):
         g = G.Grid(2)
         pp = P.Player("ai","gianni")
@@ -121,41 +170,41 @@ class TestShipClass(object):
 # GRID  
 class TestGridClassAndUtils(object):
     def test_coordsConvert(gilliam):
-        assert G.coordsConvert(["C",2],LetCol=False)==[2,1]
-        assert G.coordsConvert(["c",2],LetCol=False)==[2,1]
-        assert G.coordsConvert(["C",2])==[1,2]
-        assert G.coordsConvert(["C",2],True,True)==[1,2]
-        assert G.coordsConvert(["C",2],True)==[1,2]
-        assert G.coordsConvert(["C",2],True,False)==[2,1]
-        assert G.coordsConvert([1,2],False,False)==['B',3]
-        assert G.coordsConvert(["A",1])==[0,0]
-        assert G.coordsConvert(["d",4])==[3,3]
-        assert G.coordsConvert(["A",1],True,False)==[0,0]
-        assert G.coordsConvert(["d",4],True,False)==[3,3]
-        assert G.coordsConvert(["A",2],True,False)==[0,1]
-        assert G.coordsConvert([2,2],False,False)==['C',3]
-        assert G.coordsConvert([3,0],False,False)==['D',1]
-        assert G.coordsConvert([0,3],False,True)==['A',4]
-        assert G.coordsConvert([3,1],False,True)==['D',2]
+        assert coordsConvert(["C",2],LetCol=False)==[2,1]
+        assert coordsConvert(["c",2],LetCol=False)==[2,1]
+        assert coordsConvert(["C",2])==[1,2]
+        assert coordsConvert(["C",2],True,True)==[1,2]
+        assert coordsConvert(["C",2],True)==[1,2]
+        assert coordsConvert(["C",2],True,False)==[2,1]
+        assert coordsConvert([1,2],False,False)==['B',3]
+        assert coordsConvert(["A",1])==[0,0]
+        assert coordsConvert(["d",4])==[3,3]
+        assert coordsConvert(["A",1],True,False)==[0,0]
+        assert coordsConvert(["d",4],True,False)==[3,3]
+        assert coordsConvert(["A",2],True,False)==[0,1]
+        assert coordsConvert([2,2],False,False)==['C',3]
+        assert coordsConvert([3,0],False,False)==['D',1]
+        assert coordsConvert([0,3],False,True)==['A',4]
+        assert coordsConvert([3,1],False,True)==['D',2]
     def test_coordsValidate(idle):
         dim = 8
-        assert G.coordsValidate(dim,["C",2]) == True
-        assert G.coordsValidate(dim,["C",7], False) == True
-        assert G.coordsValidate(dim,["H",2]) == True
-        assert G.coordsValidate(dim,[4,5],True) == True
-        assert G.coordsValidate(dim,[0,0], True) == True
-        assert G.coordsValidate(dim,[7,7], True) == True
-        assert G.coordsValidate(dim,[0,0], True) == True
-        assert G.coordsValidate(dim,["R",2]) == False
-        assert G.coordsValidate(dim,["C",9]) == False
-        assert G.coordsValidate(dim,["C",22]) == False
-        assert G.coordsValidate(dim,["C",2], True) == False
-        assert G.coordsValidate(dim,["A",1], True) == False
-        assert G.coordsValidate(dim,[0,8],True) == False
-        assert G.coordsValidate(dim,[0,28]) == False
-        assert G.coordsValidate(dim,[8,2]) == False
-        assert G.coordsValidate(dim,[-33,8]) == False
-        assert G.coordsValidate(dim,["A",13], False) == False
+        assert coordsValidate(dim,["C",2]) == True
+        assert coordsValidate(dim,["C",7], False) == True
+        assert coordsValidate(dim,["H",2]) == True
+        assert coordsValidate(dim,[4,5],True) == True
+        assert coordsValidate(dim,[0,0], True) == True
+        assert coordsValidate(dim,[7,7], True) == True
+        assert coordsValidate(dim,[0,0], True) == True
+        assert coordsValidate(dim,["R",2]) == False
+        assert coordsValidate(dim,["C",9]) == False
+        assert coordsValidate(dim,["C",22]) == False
+        assert coordsValidate(dim,["C",2], True) == False
+        assert coordsValidate(dim,["A",1], True) == False
+        assert coordsValidate(dim,[0,8],True) == False
+        assert coordsValidate(dim,[0,28]) == False
+        assert coordsValidate(dim,[8,2]) == False
+        assert coordsValidate(dim,[-33,8]) == False
+        assert coordsValidate(dim,["A",13], False) == False
 #CLI
 class TestCliClass(object):
     def test_gridRenderOnly(chapman):

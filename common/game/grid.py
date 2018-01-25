@@ -1,46 +1,5 @@
 from operator import itemgetter
-from random import seed,randint
-
-#from ship import Ship
-def coordsValidate(dim:int,vett:list,OnlyNum:bool=False)->bool:
-    '''Validate, for the given grid, a couple of coordinates (2nd argument) in one of the two
-    possibile formats, letter+number or two numbers, decided by the 3rd argument); this function,
-does not care of how coordinates refers to row and columns (unless the grid is square)'''
-    if (len(vett)==0):
-        return False
-    if (OnlyNum):
-        x,y = vett
-        return ( x in range(0,dim) and y in range(0,dim) )
-    else:
-        letter, number = vett
-        if ( type(letter)!=str or type(number)!=int ):
-            return False
-        letterAscii = ord(letter.upper())
-        if ( (letterAscii not in range(65,65+dim)) or (number not in range(1,dim+1)) ):
-            return False
-        return True
-def coordsConvert(vett:list,ToNum:bool=True, LetCol:bool=True)->list: #to extend using class argument to locate alpahbet used for letter (now default A-Z)
-    '''Convert coordinates for the given grid between two formats
-    - AlphaNumeric  (letter + integer >0 intepreted as Col/Rig or viceversa, decided by 4th arg e.g. C3)
-    - Numeric (double 0-indexed matrix, e.g. [2][0])
-    The direction of the conversion is given by the third argument, which
-    by default is false, thus making conversion as [A,12]=>[0,11] (default)'''
-    l = [lambda x: x[::-1], lambda x: x]
-    index = int(LetCol)
-    if (ToNum):
-        return l[index]([ vett[1]-1, ord(vett[0].upper())-65  ]) #e.g. ["B",3] => [1,1]
-    else:
-        l[index](vett)
-        return [ chr(vett[0]+65).upper() , vett[1]+1  ] #e.g. [1,0] => ["A",2]
-def randomCoord(dim:int, Num:bool, LetCol:bool)->list:
-    '''Return a random coordinate,mainly for testing purpose'''
-    seed()
-    x = randint(0,dim-1)
-    y = randint(0,dim-1)
-    if Num :
-        return [x,y]
-    else:
-        return coordsConvert([x,y],False,LetCol)
+from common.utils.grid import coordsConvert,coordsValidate
 
 class SeaMap :
     def __init__ (self, dim): #in future a rectangular grid??
@@ -65,8 +24,12 @@ class Grid(SeaMap) :
         self.lastShotInfo = dict()
         self.lastAreaShotInfo = []
         self.ships = []
-    def clear():
-        pass
+    def clear(self):
+        SeaMap.__init__(self,self.dim)
+        self.void = True
+        self.lastShotInfo = dict()
+        self.lastAreaShotInfo = []
+        self.ships = []
     def coordsValidateAndConvert(self,vett):
         if coordsValidate(self.dim,vett):
             return coordsConvert(vett,self.letCol)
