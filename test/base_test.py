@@ -115,21 +115,39 @@ class TestPlayerClassAndUtils(object):
         g.addShip( S.Ship("testship",4), [["a",1],["b",1],["c",1],["D",1]] )
         for i in range(2,5):
             assert pp.basicAIship(i, 0, g.slots) != False
+        g.clear()
         g.addShip( S.Ship("testship",3), [["a",2],["A",3],["a",4]] )
         assert pp.basicAIship(3, 0, g.slots) != False
-        g.addShip( S.Ship("testship",3), [["B",2],["b",3],["c",4]] )
+        g.addShip( S.Ship("testship",3), [["B",2],["b",3],["b",4]] )
         g.addShip( S.Ship("testship",3), [["C",2],["c",3],["C",4]] )
-        assert sorted(pp.basicAIship(3, 0, g.slots)) == sorted([[1,3],[3,3]])
-        g.addShip( S.Ship("testship",3), [["B",2],["b",3],["c",4]] )
-        for i in range(5,5):
-            assert pp.basicAIship(i, 0, g.slots) == False
+        g.addShip( S.Ship("testship",4), [["d",1],["d",2],["d",3],["D",4]] )
+        assert sorted(pp.basicAIship(3, 0, g.slots)) == sorted([[0,0],[0,2]])
+        assert sorted(pp.basicAIship(3, 0, g.slots,g.ships)) == sorted([[0,0],[0,2]])
+        g.clear()
+        g.addShip( S.Ship("testship",4), [["D",1],["b",1],["c",1],["A",1]] )
+        g.addShip( S.Ship("testship",4), [["a",4],["b",4],["C",4],["D",4]] )
+        g.addShip( S.Ship("testship",2), [["A",2],["a",3]] )
+        g.addShip( S.Ship("testship",2), [["d",3],["D",2]] )
+        g.addShip( S.Ship("testship",2), [["b",2],["C",2]] )
+        assert sorted(pp.basicAIship(2, 0, g.slots)) == sorted([[2,1],[2,2]])
     def test_basicAIshipWithDistance(jones):
         g = G.Grid(4)
         pp = P.Player("ai","gianni")
         g.addShip( S.Ship("testship",4), [["a",1],["b",1],["c",1],["D",1]] )
         for i in range(2,1000):
-            assert pp.basicAIship(i, 4, g.slots) == False
-        #assert sorted(pp.basicAIship(4, 2, g.slots)) == sorted([[3,0],[3,3]])
+            assert pp.basicAIship(i, 2+i, g.slots,g.ships) == False
+        assert sorted(pp.basicAIship(4, 2, g.slots,g.ships)) == sorted([[3,0],[3,3]])
+        g.clear()
+        g.addShip(S.Ship("test",4),[["A",1],["a",2],["A",3],["a",4]])
+        assert sorted(pp.basicAIship(4,2,g.slots,g.ships)) == sorted([[0,3],[3,3]])
+        g.clear()
+        for i in ("A","b"):
+            g.addShip( S.Ship("testship",4), [[i,3],[i,2],[i,4],[i,1]] )
+        for i in range(4,1000):
+            assert pp.basicAIship(4, i, g.slots,g.ships) == False
+        assert sorted(pp.basicAIship(4, 1, g.slots,g.ships)) == sorted([[0,3],[3,3]])
+        g.clear()
+        
     def test_basicAIshot(gilliam):
         g = G.Grid(2)
         pp = P.Player("ai","gianni")
@@ -221,10 +239,6 @@ class TestCliClass(object):
         c = C.CLI()
         assert g.addShip( S.Ship("cargo",5), [["B",2],["B",3],["B",1],["B",4]] ) == False
         assert g.addShip( S.Ship("cargo",4), [["W",2],["B",3],["B",1],["B",4]] ) == False
-        assert g.addShip( S.Ship("cargo",4), [["A",2],["B",3],["B",1],["B",4]] ) == True #addShip does not check space continguity or freedom
-        assert g.slots[0][1] == [1,0]
-        assert g.slots[2][1] == [1,0]
-        assert g.slots[3][1] == [1,0]
         c.renderGrid(g,True,False)
         g = G.Grid(10)
         assert g.addShip( S.Ship("cargo",4), [["B",2],["B",3],["B",1],["B",4]] ) == True

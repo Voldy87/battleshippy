@@ -12,6 +12,9 @@ class Ship:
             name = "SINKED" + self.name
             hit = ""
         return  name + ": " + str(self.length) + " long" + hit 
+    def clear(self):
+        self.hitCount = 0
+        self.sinked = False
     def getShot (self):
         self.hitCount += 1
         self.sinked = (self.hitCount>=self.length)

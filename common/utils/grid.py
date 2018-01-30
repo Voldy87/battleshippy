@@ -1,5 +1,6 @@
 from numpy import sign
 from random import seed,randint
+from operator import itemgetter
 
 def coordsValidate(dim:int,vett:list,OnlyNum:bool=False)->bool:
     '''Validate, for the given grid, a couple of coordinates (2nd argument) in one of the two
@@ -47,6 +48,7 @@ def allCoords(dim):
             ret.append([x,y])
     return ret
 def squaresDistance(x1,y1,x2,y2):
+    '''Distance between two cells'''
     return abs(complex(x2-x1,y2-y1))
 def squaresBetween(start,end):
     '''Generate all coordinates between two cells, using the double 0-indexed notation both for input and output'''
@@ -64,7 +66,6 @@ def validSquares(obj,matrix):
     side = len(matrix)
     x = obj[0][0]
     y = obj[0][1]
-    
     if (len(obj)<2): #last shot before this one hit a ship for the first time
         neighbors = lambda x, y : [
             [x2, y2]
@@ -78,14 +79,14 @@ def validSquares(obj,matrix):
         return neighbors(x,y)
     else: #i'm trying to hit again a ship
         neighbors=[]
-        if (x==obj[1][0]): #hit ship is placed vertically (common abscissa)
+        if (x==obj[1][0]): #hit ship is placed horizontally (common abscissa)
             yUp = +1+max(idle[1]  for idle in obj)
             yDw = -1+min(cleese[1]  for cleese in obj)
             if (yUp<side and matrix[x][yUp][1]==0):
                 neighbors.append([x,yUp])
             if (yDw>=0 and matrix[x][yDw][1]==0):
                 neighbors.append([x,yDw])
-        elif (y==obj[1][1]): #hit ship is placed horizontally (common ordinate)
+        elif (y==obj[1][1]): #hit ship is placed vertically (common ordinate)
             xRt = +1+max(obj,key=lambda palin : palin[0])[0]
             xLt = -1+min(obj,key=lambda chapman : chapman[0])[0]
             if (xRt<side and matrix[xRt][y][1]==0):
@@ -95,3 +96,45 @@ def validSquares(obj,matrix):
         else: #never executed
             pass
         return neighbors
+def squaresAlignment(coords):
+    '''Return the initial letter for the alignment of a list (2 minimum length) of cell coordinates (Horizontal, Vertical, Diagonal):
+        assumes that at least two coordinates of the list are different'''
+    dim = len(coords)
+    if dim<2:
+        raise Exception('Minimum number of coordinates to give is 2')
+    xx, yy = coords[0]
+    horizontal, vertical = True, True
+    for i in range(1,dim):
+        if xx!=coords[i][0]:
+             horizontal = False
+        if yy!=coords[i][1]:
+             vertical = False
+    if horizontal and not vertical:
+        return "H"
+    if vertical and not horizontal:
+        return "V"
+    return "D"
+def coordsEndpoints(pos):
+    dim = len(pos)
+    if dim < 2 :
+        return False
+    direction = squaresAlignment(pos)
+    if direction=="D":
+        raise Exception('Coordinates not consecutives')
+    elif direction=="H":
+        index=1
+    elif direction=="V":
+        index = 0
+    else :
+        raise Exception('Alignment detector error')
+    sortedPos = sorted(pos, key=itemgetter(index))
+    return [sortedPos[0],sortedPos[dim-1]] 
+if ( __name__ == "__main__"):
+    print(squaresAlignment([[5,9],[4,9],[0,9],[1,9],[2,9],[3,9]]))
+    print(squaresAlignment([[0,9],[0,3],[0,9]]))
+    print(squaresAlignment([[0,9],[0,3],[2,9]]))
+    print(squaresAlignment([[3,9],[4,9],[5,9]]))
+    print(coordsEndpoints([[5,9],[4,9],[0,9],[1,9],[2,9],[3,9]]))
+    print(coordsEndpoints([[0,9],[0,3],[0,9]]))
+    print(coordsEndpoints([[2,1],[2,3],[2,2]]))
+    print(coordsEndpoints([[3,9],[4,9],[5,9]]))

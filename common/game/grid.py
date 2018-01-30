@@ -1,5 +1,5 @@
 from operator import itemgetter
-from common.utils.grid import coordsConvert,coordsValidate
+from common.utils.grid import coordsConvert,coordsValidate, coordsEndpoints, squaresAlignment
 
 class SeaMap :
     def __init__ (self, dim): #in future a rectangular grid??
@@ -75,8 +75,7 @@ class Grid(SeaMap) :
         return True              
     def addShip (self,vessel,pos): # variable length argument list for functions
         '''Given a single ship and its coordinates put it on the grid, checking
-        if coordinates are of the correct number and valid, but without checking
-        if the space that they occupy is consecutive or free'''
+        if coordinates are of the correct number and valid'''
         if vessel.length != len(pos) or vessel.length not in range (1,self.dim+1): #ship too long, not enough or too many coordinates for this ship
             return False
         coords = []
@@ -89,7 +88,9 @@ class Grid(SeaMap) :
                 break
         if False in coords: #never fails as the coords validity is checked before invoking this function
             return False
-        self.ships.append(vessel)
+        if squaresAlignment(coords)=="D":
+            return False
+        self.ships.append({"vessel":vessel,"ends":coordsEndpoints(coords)})
         shipIndex = len(self.ships)
         for [x,y] in coords:
             self.slots[x][y] = [shipIndex,0]
@@ -110,7 +111,7 @@ class Grid(SeaMap) :
         else:   # a ship is placed in this slot   
             if (shotsNum<0): #there was a ship here, but it was already sinked when it took this shot
                 self.slots[x][y][1] = shotsNum-1
-            elif (shotsNum==0 and self.ships[shipID-1].getShot()): # just sinked the ship!
+            elif (shotsNum==0 and self.ships[shipID-1]["vessel"].getShot()): # just sinked the ship!
                 for xx in range(0,self.dim):
                     for yy in range(0,self.dim):
                         if (self.slots[xx][yy][0]==shipID): 
@@ -136,6 +137,6 @@ class Grid(SeaMap) :
                         self.lastAreaShotInfo.append(self.lastShotInfo)
         return True
     def sinkedShips(self):
-        return list(filter(lambda x : x.sinked==True, self.ships))
+        return list(filter(lambda x : x["vessel"].sinked==True, self.ships))
     def allSinked(self):
         return len(self.sinkedShips())==len(self.ships)
