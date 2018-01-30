@@ -147,7 +147,14 @@ class TestPlayerClassAndUtils(object):
             assert pp.basicAIship(4, i, g.slots,g.ships) == False
         assert sorted(pp.basicAIship(4, 1, g.slots,g.ships)) == sorted([[0,3],[3,3]])
         g.clear()
-        
+        g.addShip( S.Ship("testship",2), [["B",2],["C",2]] )
+        g.addShip( S.Ship("testship",2), [["d",3],["D",4]] )
+        assert sorted(pp.basicAIship(2, 1, g.slots,g.ships))== sorted([[3,0],[3,1]])
+        g.clear()
+        g.addShip( S.Ship("testship",3), [["B",2],["b",4],["b",3]] )
+        assert sorted(pp.basicAIship(4, 1, g.slots,g.ships))== sorted([[3,3],[0,3]])
+        g.addShip( S.Ship("testship",2), [["C",1],["D",1]] )
+        assert sorted(pp.basicAIship(2, 1, g.slots,g.ships))== sorted([[3,3],[2,3]])
     def test_basicAIshot(gilliam):
         g = G.Grid(2)
         pp = P.Player("ai","gianni")

@@ -1,6 +1,7 @@
 # python -m local_executable.battleshippy
 
 import common.game.grid as Gr
+import common.game.ship as Sh
 import common.game.player as Pl
 import common.interface.cli as CL, common.interface.gui as GU
 ##import common.interface.menu as ME
@@ -8,43 +9,80 @@ import common.interface.cli as CL, common.interface.gui as GU
 
 import threading
 from random import seed,choice
+from enum import Enum,auto,unique
 
-
+@unique
+class MatchType(Enum):
+    VERSUS_PC = auto()
+    VERSUS_HUMAN = auto()
+    AI_BATTLE = auto()
+class InterfaceType(Enum):
+    CLI = auto()
+    GUI = auto()
+class StorageType(Enum):
+    DB_LOCAL = auto()
+    FILE_LOCAL = auto()
+    DB_REMOTE = auto()
+    FILE_REMOTE = auto()
+    
+games = {
+        MatchType.VERSUS_PC: set([Pl.PlayerType.HUMAN, Pl.PlayerType.PC]),
+        MatchType.VERSUS_HUMAN:set([Pl.PlayerType.HUMAN]),
+        MatchType.AI_BATTLE: set([Pl.PlayerType.PC])
+    }
+ships = {
+    10:[
+        ["destroyer",1,2], #name,num,len
+        ["cruiser",1,3],
+        ["submarine",1,3],
+        ["battleship",1,4],
+        ["carrier",1,5]
+    ]
+} #loaded from config, normally includes or loads names
 turn = 1
 cv = threading.Condition()
 
 class Action(threading.Thread):
-    def __init__(self, index, grids, players, uiMode, dataMode): 
+    def __init__(self, index:int, grids:list, players:set, uiMode:InterfaceType, dataMode:StorageType, distance:int): 
         threading.Thread.__init__(self) 
-        self.grids = grids
         self.index = index
-        if(uiMode=="cli"):
+        self.myGrid, self.enemyGrid = grids[index], grids[1-index] #deve puntare all'array di 2 griglie
+        if(uiMode is InterfaceType.CLI):
             self.ui=CL.CLI()
-        else:
+        elif(uiMode is InterfaceType.GUI):
             self.ui=CL.GUI()
+        else:
+            exit(1)#better an exception 
 ##       if(dataMode=="localDB" || dataMode=="remoteDB"):
 ##            self.data=DataDb()
 ##        else:
 ##            self.data=DataFile()
-        self.me, self.enemy = players[index].name, players[1-index].name
-        self.isPC =  players[index].nature == "PC"
+        self.me, self.enemy = players[index], players[1-index]
+        self.isPC =  players[index].nature is Pl.PlayerType.PC
+        self.output = not self.isPC #may be different, e.g. in a 2 pc battle one wants to see what happens (consider introducing a delay)
+        self.minShipDistance = distance
         #currentPlayer=0 #always start first in Players array (random choice in main)
         #self.turn = 1 #in one turn each player takes a shot
         #self.cv = cv
-    def computeShipNamesAndCoord(self, index, shipsToGive, distance):
+    def computeShipNamesAndCoord(self):
+        shipsToGive = ships[self.myGrid.dim]
+        vett = []
         for elem in shipsToGive: #elem = ship,dim
-            coords = self.players[self.index].computerShip(elem.dim,distance,grids[self.index])
-            vett.append(elem.ship,pos)
+            for i in range(0,elem[1]): #there can be more ships with the same name/type
+                pos = self.me.computerShip(elem[2],"basic",self.minShipDistance,self.myGrid.slots)
+                vett.append({"name":elem[0],"coords":pos}) #not useful to pass ship dim (is pos len) and number (each copy is appended)
         return vett
-    def getShipNamesAndCoord(self, distance, *shipsToGive):
-        vett = self.ui.askAllShips(self.grids.dim, shipsToGive)
+    def getShipNamesAndCoord(self):
+        side = self.myGrid.dim
+        shipsToGive = ships[side]
+        vett = self.ui.askAllShips(side, shipsToGive)
         if (vett==None):
             vett=[]
         else:
             return vett #e.g. django gui wait for positioning
         for elem in shipsToGive: #elem = Ship
             while True:
-                coords = self.ui.askSingleShip(self.grids.dim,elem)
+                coords = self.ui.askSingleShip(side,elem)
                 if (grids[self.index].posChecker(distance,coords)):
                     break 
             vett.append([elem.ship,coords])
@@ -59,25 +97,26 @@ class Action(threading.Thread):
         global turn
         return int(turn/2)+1
     def run(self):
-##        ownGrid, othersGrid = self.grids[self.index], self.grids[1-self.index]
-##      UI = self.ui
-     ##   UI.startSplash()
-        ## if (self.isPC):
-##                vett = self.computeShipNamesAndCoord( shipsToGive, 0)
-       ##         ownGrid.shipsPositioning(vett) 
-##            else: 
+        UI = self.ui
+        UI.startSplash(self.me.name)
+        if (self.isPC):
+            vett = self.computeShipNamesAndCoord()
+            self.myGrid.shipsPositioning(vett)
+        #if self.output:
+            UI.renderGrid(self.myGrid,True,False)
+##            else:
 ##                 vett = self.getShipNamesAndCoord(shipsToGive, 0) #ships to give depend on config
-##                  ownGrid.shipsPositioning(vett)
+##                  self.my.shipsPositioning(vett)
 ##                  UI.render(ownGrid,True,False)
             
-        for i in range(1,20):#while not otherGrid.allSinked() : 
+        for i in range(1,6):#while not otherGrid.allSinked() : 
             #global currentPlayer
-##          if (ownGrid.lastShotInfo):
-##              UI.shotUpcome(ownGrid.lastShotInfo) #if there are no shots (1st turn 1st player does nothing and pass diectly to take shot vs enemy
-##              UI.render(ownGrid,True,True)
-            print("I AM "+str(self.index) + " and this is turn " + str(self.currentTurn()) +" \n")
+##          if (self.myGrid.lastShotInfo):
+##              UI.shotUpcome(self.myGrid.lastShotInfo) #if there are no shots (1st turn 1st player does nothing and pass diectly to take shot vs enemy
+##              UI.render(self.myGrid,True,True)
+            print("I AM "+str(self.me.name) + " and this is turn " + str(self.currentTurn()) +" \n")
             cv.acquire() #consider not blocking interaction for all block if not ciritcal, especially in GUI
-##            if (ownGrid.allSinked()) :
+##            if (self.myGrid.allSinked()) :
 ##                  cv.notify()
 ##                    cv.release()
 ##                break
@@ -86,43 +125,52 @@ class Action(threading.Thread):
                 cv.wait()
             #self.tt+=1
             print(str(self.index) + " IS DOIG THINGS\n")
-##            if (player.nature == "PC"):
+##            if (self.isPc):
 ##                pos = player.computerTarget()
 ##            else: 
 ##                pos = UI.getTarget()
 ##              otherGrid.takeShot(pos)
-##              UI.shotUpcome(otherGrid.lastShotInfo)
-    ##            UI.render(othersGrid,False,True)
+##              UI.shotUpcome(self.enemyGrid.lastShotInfo)
+    ##            UI.render(self.enemyGrid,False,True)
             self.changeFlag()
             cv.notify()
             cv.release()
 ##        UI.showResults()
-##        UI.render(ownGrid,True,False)
-##        UI.render(othersGrid,True,False)
+##        UI.render(self.myGrid,True,False)
+##        UI.render(self.enemyGrid,True,False)
 ##        UI.finishSplash()
 
 
-def initGame (side,players,uiMode):
-    grids = [Gr.Grid(side), Gr.Grid(side)]
-    players = [Pl.Player("andrea","HUMAN"),Pl.Player("computer", "PC")]
+def initGame (side:int, playerNames:list, matchType:MatchType,storageType:StorageType):
+    gridArray = [Gr.Grid(side), Gr.Grid(side)]
+    if len(games[matchType])==1:
+        PlayerTypes = list(games[matchType].pop())
+        PlayerTypes *= 2
+    else:
+        PlayerTypes = list(games[matchType])
+    playerArray=[]
+    for i in (0,1):
+        playerArray.append(Pl.Player(PlayerTypes[i],playerNames[i]))
     seed()
     l = [lambda x: x[::-1], lambda x: x]
-    choice(l)(players) #randomly choose which player will start (has index 0)
-    return grids, players
+    choice(l)(playerArray) #randomly choose which player will start (has index 0), but can be decided before (look config) givin prio
+    return gridArray, playerArray #two arrays of 2 elements each
 def updateGlobalStats(stats):
     pass
 
-if __name__ == "__main__":#this will be also the main thread on the django server
-    uiMode = "cli" #args or ask prompt..
-    dataMode = "localFile" # localDB, remoteFile, remoteDB    
+if __name__ == "__main__":#this will be also the shape of the main thread on the django server
+    uiMode = InterfaceType.CLI #args or ask prompt..
+    dataMode = StorageType.FILE_LOCAL    
     #in case of start..
-    grids, players = initGame(10,[2,3,3,5],uiMode)
+    grids, players = initGame(10,["andrea","computer"],MatchType.VERSUS_PC,StorageType.FILE_LOCAL)
+    # all above args of init are taken from config files or others, not hardcoded
+    distance = 0 # taken from config, too
     gameEnded = False
     stats = None #global stats 
     threads=[None,None]
     #workers (in django assigned to clients..)
-    threads[0] =  Action(0, grids, players, uiMode, dataMode)
-    threads[1] =  Action(1, grids, players, uiMode, dataMode)
+    threads[0] =  Action(0, grids, players, uiMode, dataMode,distance)
+    threads[1] =  Action(1, grids, players, uiMode, dataMode,distance)
     threads[0].start()
     threads[1].start()
     for x in threads: 

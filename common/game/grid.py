@@ -1,6 +1,8 @@
 from operator import itemgetter
 from common.utils.grid import coordsConvert,coordsValidate, coordsEndpoints, squaresAlignment
 
+from common.game.ship import Ship
+
 class SeaMap :
     def __init__ (self, dim): #in future a rectangular grid??
         ''' Constructor for this class. Only square side needed.
@@ -98,7 +100,8 @@ class Grid(SeaMap) :
         return True
     def shipsPositioning(self,vett):
         for spam in vett:
-            self.addShip(spam) #spam = ship,pos
+            pos = spam["coords"]
+            self.addShip(Ship(spam["name"],len(pos)), pos) 
     def takeShot(self,coord):
         '''Modify the grid slot matrix using a 0-index couple of coordinates'''
         x = coord[0]

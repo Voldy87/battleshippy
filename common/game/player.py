@@ -1,5 +1,6 @@
 from math import inf
 from random import seed,choice,randint
+from enum import Enum,auto
 
 from common.utils.grid import validSquares, allCoords, squaresDistance, squaresBetween
 #togliere sotto se test ok
@@ -16,9 +17,13 @@ def shipsMinDistance(foo,bar):
                 minim = dist
     return minim-1
 
+class PlayerType(Enum):
+    PC = auto()
+    HUMAN = auto()
+
 class Player:
     '''Constructor'''
-    def __init__(spam,nature,name):
+    def __init__(spam,nature:PlayerType,name:str ):
         spam.nature = nature
         spam.name = name
         spam.lastGoodShots = []
@@ -46,7 +51,9 @@ class Player:
         pass
     def computerTarget(self,slots,strategy="basic"):
         '''Return random target coordinates, according to strategy and last shot upcome'''
-        switch = { "basic" : self.basicAIshot }
+        switch = {
+            "basic" : self.basicAIshot #ENUM for Basic??
+        }
         switch[strategy](slots)
     def basicAIshot(self,slots):
         seed()
@@ -59,7 +66,9 @@ class Player:
             return choice(temp) #random extract one coordinate from not yet hit ones
     def computerShip(self,shipLen,strategy,distance,slots):
         '''Insert ship in free map spaces respecting the distance, choosing an algorithm'''
-        switch = {"basic":self.basicAIship}
+        switch = {
+            "basic":self.basicAIship #ENUM for Basic??
+        }
         endpoint = switch[strategy](shipLen,distance,slots)
         return squaresBetween(endpoint[0],endpoint[1])    
     def basicAIship(self,shipLen,minDistance,slots,ships=[]):
@@ -95,8 +104,7 @@ class Player:
                     if shipsMinDistance(candidate,positioned) < minDistance :
                         flag = True
                         break
-            if (not flag):
-                return [xS,yS],[xE,yE]
+        return [[xS,yS],[xE,yE]]
                             
 if ( __name__ == "__main__"):
 ##    d = [ [[11,0] ,[1,0] ,[0,0] ,[0,1]] ,[[3,0] ,[4,0] ,[2,0] ,[0,-1]] ,[[0,10] ,[166,0] ,[0,2] , [111,1]] ,[[0,0] ,[1,1] ,[0,-2] ,[1,0]] ]

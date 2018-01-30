@@ -1,4 +1,5 @@
 .cache
+conf/db.ini
 *__pycache__
 colorama*
 texttable*

@@ -56,6 +56,8 @@ class CLI:
     def coordString(self,coord,LetCol):
         vett = convert(coord,False,LetCol)
         return str(vett[0])+str(vett[1])
+    def startSplash(self,name):
+        self.io.write("Welcome to the Battleship Game, "+name+"!")
     def askAllShips(self,side,ships):
         return None
     def askSingleShip(self, side, ship): #ship is a ship class object
