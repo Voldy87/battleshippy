@@ -106,10 +106,13 @@ class Grid(SeaMap) :
 ##            pos = spam["coords"]
 ##            if not self.addShip(Ship(spam["name"],len(pos)), pos,NumericCoord):
 ##                return False
-    def takeShot(self,coord):
-        '''Modify the grid slot matrix using a 0-index couple of coordinates'''
-        x = coord[0]
-        y = coord[1]
+    def takeShot(self,coord,OnlyNum=True):
+        '''Modify the grid slot matrix'''
+        if OnlyNum:
+            x = coord[0]
+            y = coord[1]
+        else:
+            x,y=self.coordsValidateAndConvert(coord)
         shipID = self.slots[x][y][0]
         shotsNum = self.slots[x][y][1]
         self.slots[x][y][1] += 1

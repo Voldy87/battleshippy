@@ -1,7 +1,7 @@
 from math import inf
 from random import seed,choice,randint
 from enum import Enum,auto
-
+#rename in funzioni di sole AI, visto che il player human nn c'è? oppure è ok perchè alcune cose il giocatore umano può chiederle automatiche (come lo ship positioning??)
 from common.utils.grid import validSquares, allCoords, squaresDistance, squaresBetween
 #togliere sotto se test ok
 from common.game.grid import Grid
@@ -54,12 +54,12 @@ class Player:
         switch = {
             "basic" : self.basicAIshot #ENUM for Basic??
         }
-        switch[strategy](slots)
+        return switch[strategy](slots)
     def basicAIshot(self,slots):
         seed()
         side = len(slots)
         if (self.lastGoodShots):# current slot is a ship hit(not sunk)
-            shootables = validSquares(self.lastGoodShots, slots )
+            shootables = validSquares( self.lastGoodShots, slots )
             return choice(shootables)
         else:
             temp = [ [x,y] for [x,y] in allCoords(side) if slots[x][y][1]==0]

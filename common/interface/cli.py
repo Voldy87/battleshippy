@@ -62,15 +62,15 @@ class CLI:
         self.io.write("Welcome to the Battleship Game, "+name+"!")
 ##    def askAllShips(self,side,ships):
 ##        return None
-    def askSingleShip(self, side, ship): #ship is a ship class object
+    def askSingleShip(self, side:int, ship:Ship):
         """ Ask all the required positions for a single ship: only check that all positions are given:
         returns the array with the inserted coordinates, in alphanumeric format (e.g. ["C",5]) """
         dim = ship.length
         name = ship.name
         pointCoords = []
+        given = ""
         for spam in range(1,dim+1):
             flag = True
-            given = ""
             while flag:
                 flag = False
                 self.io.write("Insert "+name+" ship position ("+str(spam)+" of "+str(dim)+" - "+given+")")
@@ -101,6 +101,33 @@ class CLI:
                     self.io.write ('Already used position!')
                     flag= True
         return pointCoords   
+    def askTarget(self,side): #generalizzare validation coords
+        self.io.write ('Give me the coordinates where to shoot')
+        flag = True
+        pos=[]
+        while flag:
+            flag = False
+            while True:
+                self.io.write("VERTICAL/COLUMN(letter):")
+                x = self.io.read()
+                if (65<=ord(x.upper())<=65+side-1):
+                    break
+                self.io.write("A letter in the range A-"+chr(65+side-1)+", please") #improve
+            while True:
+                self.io.write("HORIZONTAL/ROW(number):")
+                y = self.io.read()
+                try:
+                   y = int(y)
+                except ValueError:
+                   self.io.write ('A number, between 1 and '+ str(side) + " please")
+                   continue
+                if ( 0 < y <= side):
+                    break
+                else:
+                    self.io.write ('A number between 1 and '+ str(side) + " please")
+            pos = [x.upper(),y]
+        return pos
+            
     def shotUpcome(self, shotInfo, LetCol):
         pos = shotInfo['coords']
         shipId, shots = shotInfo['slot']
