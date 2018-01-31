@@ -64,12 +64,12 @@ class Player:
         else:
             temp = [ [x,y] for [x,y] in allCoords(side) if slots[x][y][1]==0]
             return choice(temp) #random extract one coordinate from not yet hit ones
-    def computerShip(self,shipLen,strategy,distance,slots):
+    def computerShip(self,shipLen,strategy,distance,slots,ships=[]):
         '''Insert ship in free map spaces respecting the distance, choosing an algorithm'''
         switch = {
             "basic":self.basicAIship #ENUM for Basic??
         }
-        endpoint = switch[strategy](shipLen,distance,slots)
+        endpoint = switch[strategy](shipLen,distance,slots,ships)
         return squaresBetween(endpoint[0],endpoint[1])    
     def basicAIship(self,shipLen,minDistance,slots,ships=[]):
         '''Randomly find space for a ship (2 minimum length), returning endpoints coordinates;

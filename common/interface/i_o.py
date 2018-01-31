@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+#transform string in dict in enum?
+
 """
 The IO module it's a layer between the two user-interface classes (GUI and CLI), which
 in turn are used by the main module, and the rest of the system, allowing sending
@@ -10,7 +12,7 @@ and remote (e.g. playing the game on the web site built with Django)
 __author__ =  'Andrea Orlandi'
 __version__=  '1.0'
 
-import time, sys #all?
+import time, sys, os #all?
 
 class I_O:
     def __init__(self, inpuType="stdin", outpuType="stdout", **options):
@@ -46,8 +48,16 @@ class I_O:
             'stdCLI' : self.stdIn_cli,
             'stdGUI' : self.stdIn_tkinter,
             'socket' : self.readSocket, 
-            'django' : self.djangoRcv}
+            'django' : self.djangoRcv
+        }
         return switch[self.inType]()
+    def clear(self):
+        switch = {
+            'stdCLI' : self.cli_cls
+        }
+        return switch[self.inType]()
+    def cli_cls(self):
+        os.system('cls' if os.name == 'nt' else 'clear')
     def stdOut_cli(self,string):
         print(string)
     def stdOut_tkinter(self, data):

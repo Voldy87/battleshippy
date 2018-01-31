@@ -230,6 +230,10 @@ class TestGridClassAndUtils(object):
         assert coordsValidate(dim,[8,2]) == False
         assert coordsValidate(dim,[-33,8]) == False
         assert coordsValidate(dim,["A",13], False) == False
+    def test_addShip(chapman): #try both format
+        pass
+##    def test_shipPositioning(jones):
+##        pass
 #CLI
 class TestCliClass(object):
     def test_gridRenderOnly(chapman):

@@ -4,6 +4,7 @@ import common.game.grid as Gr
 import common.game.ship as Sh
 import common.game.player as Pl
 import common.interface.cli as CL, common.interface.gui as GU
+from common.utils.grid import slotsWithShips
 ##import common.interface.menu as ME
 ##import common.data.db as DB, common.data.file as FI 
 
@@ -24,7 +25,13 @@ class StorageType(Enum):
     FILE_LOCAL = auto()
     DB_REMOTE = auto()
     FILE_REMOTE = auto()
-    
+
+def shipSlots(ships):
+    count = 0
+    for spam in ships:
+        for i in range(0,spam[1]):
+            count+=spam[2]
+    return count
 games = {
         MatchType.VERSUS_PC: set([Pl.PlayerType.HUMAN, Pl.PlayerType.PC]),
         MatchType.VERSUS_HUMAN:set([Pl.PlayerType.HUMAN]),
@@ -38,7 +45,7 @@ ships = {
         ["battleship",1,4],
         ["carrier",1,5]
     ]
-} #loaded from config, normally includes or loads names
+} #loaded from config, normally includes or loads names (yaml parse)
 turn = 1
 cv = threading.Condition()
 
@@ -64,29 +71,30 @@ class Action(threading.Thread):
         #currentPlayer=0 #always start first in Players array (random choice in main)
         #self.turn = 1 #in one turn each player takes a shot
         #self.cv = cv
-    def computeShipNamesAndCoord(self):
+    def shipsAutoPositioning(self):
         shipsToGive = ships[self.myGrid.dim]
         vett = []
         for elem in shipsToGive: #elem = ship,dim
             for i in range(0,elem[1]): #there can be more ships with the same name/type
-                pos = self.me.computerShip(elem[2],"basic",self.minShipDistance,self.myGrid.slots)
-                vett.append({"name":elem[0],"coords":pos}) #not useful to pass ship dim (is pos len) and number (each copy is appended)
-        return vett
-    def getShipNamesAndCoord(self):
+                pos = self.me.computerShip(elem[2],"basic",self.minShipDistance,self.myGrid.slots,self.myGrid.ships)
+                self.myGrid.addShip(Sh.Ship(elem[0],len(pos)), pos, True)
+    def shipsManualPositioning(self):
         side = self.myGrid.dim
         shipsToGive = ships[side]
-        vett = self.ui.askAllShips(side, shipsToGive)
-        if (vett==None):
-            vett=[]
-        else:
-            return vett #e.g. django gui wait for positioning
+##        vett = self.ui.askAllShips(side, shipsToGive)
+##        if (vett==None):
+##            vett=[]
+##        else:
+##            return vett #e.g. django gui wait for positioning
         for elem in shipsToGive: #elem = Ship
+            vessel = Sh.Ship(elem[0],elem[2])
             while True:
-                coords = self.ui.askSingleShip(side,elem)
-                if (grids[self.index].posChecker(distance,coords)):
-                    break 
-            vett.append([elem.ship,coords])
-        return vett #every elem has ship(maybe only name and len?) and position
+                coords = self.ui.askSingleShip(side,vessel)
+                if (self.myGrid.posChecker(self.minShipDistance,coords)):
+                    break
+            self.myGrid.addShip(vessel, coords, False)
+    def verifyPositioning(self):
+        return slotsWithShips(self.myGrid) == shipSlots(ships[self.myGrid.dim])
     def checkFlag(self):
         global turn
         return self.index!=(turn%2)
@@ -98,23 +106,14 @@ class Action(threading.Thread):
         return int(turn/2)+1
     def run(self):
         UI = self.ui
-        UI.startSplash(self.me.name)
-        if (self.isPC):
-            vett = self.computeShipNamesAndCoord()
-            self.myGrid.shipsPositioning(vett)
-        #if self.output:
-            UI.renderGrid(self.myGrid,True,False)
-##            else:
-##                 vett = self.getShipNamesAndCoord(shipsToGive, 0) #ships to give depend on config
-##                  self.my.shipsPositioning(vett)
-##                  UI.render(ownGrid,True,False)
+        
             
-        for i in range(1,6):#while not otherGrid.allSinked() : 
+        for i in range(1,3):#while not otherGrid.allSinked() : 
             #global currentPlayer
 ##          if (self.myGrid.lastShotInfo):
 ##              UI.shotUpcome(self.myGrid.lastShotInfo) #if there are no shots (1st turn 1st player does nothing and pass diectly to take shot vs enemy
 ##              UI.render(self.myGrid,True,True)
-            print("I AM "+str(self.me.name) + " and this is turn " + str(self.currentTurn()) +" \n")
+            
             cv.acquire() #consider not blocking interaction for all block if not ciritcal, especially in GUI
 ##            if (self.myGrid.allSinked()) :
 ##                  cv.notify()
@@ -124,7 +123,22 @@ class Action(threading.Thread):
                 print(str(self.index) + " waits for its turn\n")
                 cv.wait()
             #self.tt+=1
-            print(str(self.index) + " IS DOIG THINGS\n")
+            print("I AM "+str(self.me.name) + " and this is turn " + str(self.currentTurn()) +" \n")
+            if i==1:
+                UI.startSplash(self.me.name)
+            if (self.isPC) and i==1:
+                self.shipsAutoPositioning()
+                #self.myGrid.shipsPositioning(vett,True)
+            #if self.output:
+                UI.renderGrid(self.myGrid,True,False)
+            elif i==1:
+                #vett = self.getShipNamesAndCoord(shipsToGive, 0) #ships to give depend on config
+                self.shipsManualPositioning()
+                UI.renderGrid(self.myGrid,True,False)
+            if i==1 and not self.verifyPositioning():
+                raise Exception('Ship positioning failed')
+            
+
 ##            if (self.isPc):
 ##                pos = player.computerTarget()
 ##            else: 
@@ -164,7 +178,7 @@ if __name__ == "__main__":#this will be also the shape of the main thread on the
     #in case of start..
     grids, players = initGame(10,["andrea","computer"],MatchType.VERSUS_PC,StorageType.FILE_LOCAL)
     # all above args of init are taken from config files or others, not hardcoded
-    distance = 0 # taken from config, too
+    distance = 1 # taken from config, too
     gameEnded = False
     stats = None #global stats 
     threads=[None,None]

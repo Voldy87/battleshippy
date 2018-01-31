@@ -59,7 +59,15 @@ def squaresBetween(start,end):
         temp=[None,None]
         temp[index],temp[1-index]=num,start[1-index]
         coordinates.append(temp)
-    return coordinates 
+    return coordinates
+def slotsWithShips(matrix):
+    '''Number of slots with a ship'''
+    count=0
+    for x in range(0,matrix.dim):
+        for y in range(0,matrix.dim):
+            if matrix.slots[x][y][0]!=0:
+                count+=1
+    return count
 def validSquares(obj,matrix):
     '''Compute the neighboring cells around a series of shots on a ship (at least 1)
      using double 0-indexed lists'''

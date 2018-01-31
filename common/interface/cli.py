@@ -1,5 +1,7 @@
 # python -m common.interface.cli
 
+import os
+
 from texttable import Texttable
 from colorama import init # call init() at start
 
@@ -58,19 +60,20 @@ class CLI:
         return str(vett[0])+str(vett[1])
     def startSplash(self,name):
         self.io.write("Welcome to the Battleship Game, "+name+"!")
-    def askAllShips(self,side,ships):
-        return None
+##    def askAllShips(self,side,ships):
+##        return None
     def askSingleShip(self, side, ship): #ship is a ship class object
         """ Ask all the required positions for a single ship: only check that all positions are given:
-        returns the array with the inserted coordinates """
+        returns the array with the inserted coordinates, in alphanumeric format (e.g. ["C",5]) """
         dim = ship.length
         name = ship.name
         pointCoords = []
         for spam in range(1,dim+1):
             flag = True
+            given = ""
             while flag:
                 flag = False
-                self.io.write("Insert "+name+" ship position ("+str(spam)+" of "+str(dim)+")")
+                self.io.write("Insert "+name+" ship position ("+str(spam)+" of "+str(dim)+" - "+given+")")
                 while True:
                     self.io.write("VERTICAL/COLUMN(letter):")
                     x = self.io.read()
@@ -90,7 +93,9 @@ class CLI:
                     else:
                         self.io.write ('A number between 1 and '+ str(side) + " please")
                 pos = [x.upper(),y]
-                if pos not in pointCoords: 
+                if pos not in pointCoords:
+                    self.io.clear()
+                    given += str(pos) + ";"
                     pointCoords.append(pos)
                 else:
                     self.io.write ('Already used position!')

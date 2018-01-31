@@ -75,21 +75,24 @@ class Grid(SeaMap) :
         if( sortedPos[num-1][index] - sortedPos[0][index] != (num-1) ):
             return False #not consecutive coordinates
         return True              
-    def addShip (self,vessel,pos): # variable length argument list for functions
+    def addShip (self,vessel,pos,NumericCoord=False): # variable length argument list for functions
         '''Given a single ship and its coordinates put it on the grid, checking
         if coordinates are of the correct number and valid'''
         if vessel.length != len(pos) or vessel.length not in range (1,self.dim+1): #ship too long, not enough or too many coordinates for this ship
             return False
-        coords = []
-        for spam in pos :
-            temp = self.coordsValidateAndConvert(spam)
-            if temp :
-                coords.append(temp)
-            else :
-                coords = [False]
-                break
-        if False in coords: #never fails as the coords validity is checked before invoking this function
-            return False
+        if not NumericCoord: #format of the coordinates given for the ship
+            coords = []
+            for spam in pos :
+                temp = self.coordsValidateAndConvert(spam)
+                if temp :
+                    coords.append(temp)
+                else :
+                    coords = [False]
+                    break
+            if False in coords: #never fails as the coords validity is checked before invoking this function
+                return False
+        else:
+            coords = pos
         if squaresAlignment(coords)=="D":
             return False
         self.ships.append({"vessel":vessel,"ends":coordsEndpoints(coords)})
@@ -98,10 +101,11 @@ class Grid(SeaMap) :
             self.slots[x][y] = [shipIndex,0]
         self.void = False
         return True
-    def shipsPositioning(self,vett):
-        for spam in vett:
-            pos = spam["coords"]
-            self.addShip(Ship(spam["name"],len(pos)), pos) 
+##    def shipsPositioning(self,vett,NumericCoord):
+##        for spam in vett:
+##            pos = spam["coords"]
+##            if not self.addShip(Ship(spam["name"],len(pos)), pos,NumericCoord):
+##                return False
     def takeShot(self,coord):
         '''Modify the grid slot matrix using a 0-index couple of coordinates'''
         x = coord[0]
