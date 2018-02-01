@@ -50,12 +50,14 @@ class Player:
     def humanTarget():
         pass
     def computerTarget(self,slots,strategy="basic"):
-        '''Return random target coordinates, according to strategy and last shot upcome'''
+        '''Return random target coordinates (double 0-indexed), according to strategy and last shot upcome'''
         switch = {
             "basic" : self.basicAIshot #ENUM for Basic??
         }
         return switch[strategy](slots)
     def basicAIshot(self,slots):
+        '''Return random target coordinates (double 0-indexed): if the last shot has hit a ship
+        tries one of the squares around the latter, otherwise shoots completely randomly'''
         seed()
         side = len(slots)
         if (self.lastGoodShots):# current slot is a ship hit(not sunk)

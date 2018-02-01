@@ -5,7 +5,7 @@ from operator import itemgetter
 def coordsValidate(dim:int,vett:list,OnlyNum:bool=False)->bool:
     '''Validate, for the given grid, a couple of coordinates (2nd argument) in one of the two
     possibile formats, letter+number or two numbers, decided by the 3rd argument); this function,
-does not care of how coordinates refers to row and columns (unless the grid is square)'''
+does not care of how coordinates refers to row and columns (unless the grid is a square)'''
     if (len(vett)==0):
         return False
     if (OnlyNum):
@@ -30,8 +30,7 @@ def coordsConvert(vett:list,ToNum:bool=True, LetCol:bool=True)->list: #to extend
     if (ToNum):
         return l[index]([ vett[1]-1, ord(vett[0].upper())-65  ]) #e.g. ["B",3] => [1,1]
     else:
-        l[index](vett)
-        return [ chr(vett[0]+65).upper() , vett[1]+1  ] #e.g. [1,0] => ["A",2]
+        return l[index] ([ chr(vett[1]+65).upper() , vett[0]+1 ]) #e.g. [1,0] => ["A",2]
 def randomCoord(dim:int, Num:bool, LetCol:bool)->list:
     '''Return a random coordinate,mainly for testing purpose'''
     seed()

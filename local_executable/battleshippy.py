@@ -33,9 +33,9 @@ def shipSlots(ships):
             count+=spam[2]
     return count
 games = {
-        MatchType.VERSUS_PC: set([Pl.PlayerType.HUMAN, Pl.PlayerType.PC]),
-        MatchType.VERSUS_HUMAN:set([Pl.PlayerType.HUMAN]),
-        MatchType.AI_BATTLE: set([Pl.PlayerType.PC])
+        MatchType.VERSUS_PC: [Pl.PlayerType.HUMAN, Pl.PlayerType.PC],
+        MatchType.VERSUS_HUMAN:[Pl.PlayerType.HUMAN,Pl.PlayerType.HUMAN],
+        MatchType.AI_BATTLE: [Pl.PlayerType.PC,Pl.PlayerType.PC]
     }
 ships = {
     10:[
@@ -70,9 +70,6 @@ class Action(threading.Thread):
         self.minShipDistance = distance
         self.shotRadius = radius
         self.letCol = LetCol
-        #currentPlayer=0 #always start first in Players array (random choice in main)
-        #self.turn = 1 #in one turn each player takes a shot
-        #self.cv = cv
     def shipsAutoPositioning(self,strategy):
         shipsToGive = ships[self.myGrid.dim]
         vett = []
@@ -83,11 +80,6 @@ class Action(threading.Thread):
     def shipsManualPositioning(self):
         side = self.myGrid.dim
         shipsToGive = ships[side]
-##        vett = self.ui.askAllShips(side, shipsToGive)
-##        if (vett==None):
-##            vett=[]
-##        else:
-##            return vett #e.g. django gui wait for positioning
         for elem in shipsToGive: #elem = Ship
             vessel = Sh.Ship(elem[0],elem[2])
             while True:
@@ -109,15 +101,11 @@ class Action(threading.Thread):
     def run(self):
         UI = self.ui
         
-            
-        for i in range(1,4):#while not self.enemyGrid.allSinked() : 
-            #global currentPlayer
-##          if (self.myGrid.lastShotInfo):
-##              UI.shotUpcome(self.myGrid.lastShotInfo) #if there are no shots (1st turn 1st player does nothing and pass diectly to take shot vs enemy
-##              UI.render(self.myGrid,True,True)
-            
+            #no direct printing in prod
+        for i in range(1,4):#while not self.myGrid.allSinked():
+ 
             cv.acquire() #consider not blocking interaction for all block if not ciritcal, especially in GUI
-##            if (self.myGrid.allSinked()) :
+##            if () : #fails if this player's enemy wins
 ##                  cv.notify()
 ##                    cv.release()
 ##                break
@@ -140,6 +128,9 @@ class Action(threading.Thread):
                 if not self.verifyPositioning():
                     raise Exception('Ship positioning failed')
             else: #"normal turn"
+                if self.currentTurn()>1:
+                    UI.shotUpcome(self.myGrid.lastShotInfo,False,self.letCol) #enemy's last shot info
+                    UI.renderGrid(self.myGrid,True,True)
                 pos = None
                 if self.isPC :
                     pos = self.me.computerTarget(self.enemyGrid.slots,"basic")
@@ -147,13 +138,15 @@ class Action(threading.Thread):
                 else: 
                     pos = UI.askTarget(self.enemyGrid.dim) #gestione radius, da fare
                     OnlyNum = False
-                self.enemyGrid.takeShot(pos,OnlyNum)
+                self.enemyGrid.shoot(pos,self.shotRadius,OnlyNum)
                 if self.output:
-                    UI.shotUpcome(self.enemyGrid.lastShotInfo,self.letCol)
+                    UI.shotUpcome(self.enemyGrid.lastShotInfo,True,self.letCol)
                     UI.renderGrid(self.enemyGrid,False,True)
             self.changeFlag()
             cv.notify()
             cv.release()
+            #if self.enemyGrid.allSinked():
+             #   break
 ##        UI.showResults()
 ##        UI.render(self.myGrid,True,False)
 ##        UI.render(self.enemyGrid,True,False)
@@ -162,11 +155,7 @@ class Action(threading.Thread):
 
 def initGame (side:int, playerNames:list, matchType:MatchType,storageType:StorageType):
     gridArray = [Gr.Grid(side), Gr.Grid(side)]
-    if len(games[matchType])==1:
-        PlayerTypes = list(games[matchType].pop())
-        PlayerTypes *= 2
-    else:
-        PlayerTypes = list(games[matchType])
+    PlayerTypes = games[matchType]
     playerArray=[]
     for i in (0,1):
         playerArray.append(Pl.Player(PlayerTypes[i],playerNames[i]))

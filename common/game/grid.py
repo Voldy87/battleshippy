@@ -32,9 +32,9 @@ class Grid(SeaMap) :
         self.lastShotInfo = dict()
         self.lastAreaShotInfo = []
         self.ships = []
-    def coordsValidateAndConvert(self,vett):
+    def coordsValidateAndConvert(self,vett,ToNum=True):
         if coordsValidate(self.dim,vett):
-            return coordsConvert(vett,self.letCol)
+            return coordsConvert(vett,ToNum,self.letCol)
         else:
             return False
     def posChecker (self, distance, AlphaNumPositions):
@@ -107,7 +107,8 @@ class Grid(SeaMap) :
 ##            if not self.addShip(Ship(spam["name"],len(pos)), pos,NumericCoord):
 ##                return False
     def takeShot(self,coord,OnlyNum=True):
-        '''Modify the grid slot matrix'''
+        '''Modify the grid slot matrix, updating the lastShotInfo member,
+           which stores the coordinates in numeric (double 0-indexed matrix) format'''
         if OnlyNum:
             x = coord[0]
             y = coord[1]
@@ -128,12 +129,15 @@ class Grid(SeaMap) :
                             self.slots[xx][yy][1] = -1
         self.lastShotInfo = {"coords":{"x":x,"y":y}, "slot":self.slots[x][y], "allSinked":self.allSinked()}
         return True;
-    def shoot(self,coord,radius=0):
-        '''Launch a shoot (area effect if 3rd arg >0) centered to the given coordinate'''
+    def shoot(self,coord,radius=0,OnlyNum=False):
+        '''Launch a shoot (area effect if 3rd arg >0) centered to the given coordinate (alphanumeric notation)'''
         if (radius<0):
             return False
         self.lastAreaShotInfo = [] #both in case of single (remains void) or area (new array of lastshotinfo) this var needs to be voided
-        pos = self.coordsValidateAndConvert(coord)
+        if not OnlyNum:
+            pos = self.coordsValidateAndConvert(coord,not OnlyNum) #two possible directions for the conversion
+        else:
+            pos = coord
         if (not pos):
             return False
         if (radius==0):
@@ -149,4 +153,6 @@ class Grid(SeaMap) :
     def sinkedShips(self):
         return list(filter(lambda x : x["vessel"].sinked==True, self.ships))
     def allSinked(self):
+        if self.void: #check at turn 0, when no ships have been positioned
+            return False
         return len(self.sinkedShips())==len(self.ships)

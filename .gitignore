@@ -1,3 +1,4 @@
+test.sh
 .cache
 conf/db.ini
 *__pycache__

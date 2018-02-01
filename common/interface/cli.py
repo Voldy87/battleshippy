@@ -109,8 +109,8 @@ class CLI:
             flag = False
             while True:
                 self.io.write("VERTICAL/COLUMN(letter):")
-                x = self.io.read()
-                if (65<=ord(x.upper())<=65+side-1):
+                x = self.io.read().upper()
+                if (65<=ord(x)<=65+side-1):
                     break
                 self.io.write("A letter in the range A-"+chr(65+side-1)+", please") #improve
             while True:
@@ -125,15 +125,19 @@ class CLI:
                     break
                 else:
                     self.io.write ('A number between 1 and '+ str(side) + " please")
-            pos = [x.upper(),y]
+            pos = [x ,y]
         return pos
             
-    def shotUpcome(self, shotInfo, LetCol):
+    def shotUpcome(self, shotInfo, MyShot, LetCol):
+        if not shotInfo:
+            raise Exception('No shots on this grid')
         pos = shotInfo['coords']
         shipId, shots = shotInfo['slot']
-        if not pos:
-            return
-        string = "Your shot to the "+ self.coordString([pos['x'],pos['y']],LetCol)+" position "
+        if MyShot:
+            who="your"
+        else:
+            who="your opponent's"
+        string = "So, "+who+" shot to the "+ self.coordString([pos['x'],pos['y']],LetCol)+" position "
         if shipId==0:
             string += "has hit the sea!"
         else:
@@ -141,11 +145,11 @@ class CLI:
             if shots==-1:
                 string += ", sinking it"
             elif shots>1:
-                string += ", but you had already hit it in this position"
+                string += ", but this position had been already hit before"
             elif shots<-1:
                 string += "but it was already sinked"
         if (shotInfo['allSinked']):
-            string += " and, in addition, this was the last ship of your enemy!"
+            string += " and, in addition, this was "+who+" last ship!"
         self.io.write(string)
 if ( __name__ == "__main__"):
     dim = 4
