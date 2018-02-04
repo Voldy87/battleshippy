@@ -36,13 +36,14 @@ class I_O:
             sys.stdout.write(u"\u001b[1000D" + str(i + 1) + "%")
             sys.stdout.flush()
         print()
-    def write(self,string):
+    def write(self,string,end=None):
         switch = {
             'stdCLI' : self.stdOut_cli, # stdOut is a fun
             'stdGUI' : self.stdOut_tkinter,
             'socket' : self.writeSocket, 
-            'django' : self.djangoSend}
-        switch[self.outType](string)
+            'django' : self.djangoSend
+        }
+        switch[self.outType](string,end)
     def read(self):
         switch = {
             'stdCLI' : self.stdIn_cli,
@@ -58,8 +59,8 @@ class I_O:
         return switch[self.inType]()
     def cli_cls(self):
         os.system('cls' if os.name == 'nt' else 'clear')
-    def stdOut_cli(self,string):
-        print(string)
+    def stdOut_cli(self,string,end):
+        print(string,end=end)
     def stdOut_tkinter(self, data):
         pass
     def stdIn_cli(self):

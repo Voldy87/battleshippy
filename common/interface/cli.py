@@ -1,14 +1,15 @@
 # python -m common.interface.cli
 
-import os
+import os,time #all?
 
 from texttable import Texttable
 from colorama import init # call init() at start
 
 from common.game.grid import Grid, coordsConvert as convert
 from common.interface.i_o import I_O
+from common.utils.enums import ShootType as s
 #togliere questi sotto se nn faccio il test qui
-
+# prelevare i messaggi da un file (also good for i18n)
 from common.game.ship import Ship
 
 class CLI:
@@ -16,6 +17,22 @@ class CLI:
         init()
         self.cliSquareMap = { 'Void':'\x1b[44m', 'Ship':'\x1b[42m', 'Shot':['\x1b[0;37m',chr(216),'\x1b[0;31m'], 'Sinked':'\x1b[45m' }
         self.io = I_O('stdCLI','stdCLI')
+    def clear(self):
+        self.io.clear()
+    def countdown(self,t,msg,shortest=True):
+        self.io.write(str(msg)+str(t)+":",None)
+        while t:
+            mins,secs = divmod(t,60)
+            if shortest and mins==0:
+                frmt = '{:02d}'
+                if secs<=9:
+                    frmt = '{:2d}'
+                timeformat = frmt.format(secs)
+            else:
+                timeformat = '{:02d}:{:02d}'.format(mins,secs)
+            self.io.write(timeformat,end='\r')
+            time.sleep(1)
+            t -= 1
     def getSquareCode(self,slot,show_ships, highlightShot): #fg/pre bg/mid let/post
         what = slot[0]
         shots = slot[1]
@@ -54,7 +71,7 @@ class CLI:
             rows.append(temp)
         t = Texttable(0) #(github.com/foutaise/texttable) "__init__(self, max_width=80) max_width is an integer, specifying the maximum width of the table if set to 0, size is unlimited, therefore cells won't be wrapped"
         t.add_rows(rows) #use a generator or something similar to avoid all this arrays...
-        print(t.draw())
+        self.io.write(t.draw())
     def coordString(self,coord,LetCol):
         vett = convert(coord,False,LetCol)
         return str(vett[0])+str(vett[1])
@@ -62,6 +79,22 @@ class CLI:
         self.io.write("Welcome to the Battleship Game, "+name+"!")
 ##    def askAllShips(self,side,ships):
 ##        return None
+    def gridSplash(self,name):
+        self.io.write(name+", these are the ships as you have placed them:")
+    def battleSplash(self,name):
+        self.io.write("----------------------------------")
+        self.io.write("Real battle starts, "+name+"!!")
+    def shootSplash(self,name):
+        self.io.write("Dear "+me+", it's your turn tho shoot")
+        self.io.write("This is the situation of your oppenent's grid")
+    def changeSplash(self,me,you,mytime=5,yourtime=5):
+        self.io.write("Dear "+me+", your turn is finished")
+        self.countdown(mytime,"Please pass the console to the other player ("+you+") after ")
+        self.clear()
+        self.countdown(yourtime,you+", your turn will start in ")      
+    def finishSplash(self,name):
+        self.io.write("----------------------------------")
+        self.io.write("Game over")
     def askSingleShip(self, side:int, ship:Ship):
         """ Ask all the required positions for a single ship: only check that all positions are given:
         returns the array with the inserted coordinates, in alphanumeric format (e.g. ["C",5]) """
@@ -128,33 +161,34 @@ class CLI:
             pos = [x ,y]
         return pos
             
-    def shotUpcome(self, shotInfo, MyShot, LetCol):
+    def shotUpcome(self, name, pos, shotResult, victory, MyShot, LetCol):
         if not shotInfo:
             raise Exception('No shots on this grid')
-        pos = shotInfo['coords']
         shipId, shots = shotInfo['slot']
-        if MyShot:
-            who="your"
-        else:
-            who="your opponent's"
-        string = "So, "+who+" shot to the "+ self.coordString([pos['x'],pos['y']],LetCol)+" position "
-        if shipId==0:
+        who = ["your", "your opponent's"]
+        if not MyShot:
+            who.reverse()
+        string = "So, "+name+", "+who[0]+" shot to the "+ self.coordString([pos['x'],pos['y']],LetCol)+" position "
+        if shotResult==s.ALREADY_MISS or shotResult==s.ALREADY_SINKED or shotResult==s.ALREADY_HIT:
+            string+="(already used, however) "
+        if shotResult==FIRST_MISS or shotResult==s.ALREADY_MISS:
             string += "has hit the sea!"
         else:
             string += "has hit a ship"
-            if shots==-1:
+            if shotResult==s.JUST_SINKED:
                 string += ", sinking it"
-            elif shots>1:
-                string += ", but this position had been already hit before"
-            elif shots<-1:
-                string += "but it was already sinked"
-        if (shotInfo['allSinked']):
-            string += " and, in addition, this was "+who+" last ship!"
+            elif shotResult==s.ALREADY_HIT:
+                string += ", but in a place already shot"
+            elif shotResult==s.ALREADY_SINKED:
+                string += "but the whole ship was already sinked"
+        if victory:
+            string += " and, in addition, this was "+who[1]+" last ship!"
         self.io.write(string)
 if ( __name__ == "__main__"):
     dim = 4
     shiplen = 2
     c = CLI()
+    c.countdown(228,"next player's turn in ")
     gg = Grid(dim)
     c.renderGrid(gg,True,True)
     z = Ship("submarine",shiplen)

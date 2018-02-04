@@ -3,6 +3,7 @@ from random import seed,choice,randint
 from enum import Enum,auto
 #rename in funzioni di sole AI, visto che il player human nn c'è? oppure è ok perchè alcune cose il giocatore umano può chiederle automatiche (come lo ship positioning??)
 from common.utils.grid import validSquares, allCoords, squaresDistance, squaresBetween
+from common.utils.enums import ShootType as S
 #togliere sotto se test ok
 from common.game.grid import Grid
 from common.game.ship import Ship
@@ -22,8 +23,9 @@ class PlayerType(Enum):
     HUMAN = auto()
 
 class Player:
-    '''Constructor'''
+    '''This class'''
     def __init__(spam,nature:PlayerType,name:str ):
+        '''Constructor'''
         spam.nature = nature
         spam.name = name
         spam.lastGoodShots = []
@@ -34,19 +36,21 @@ class Player:
     def reactToShot(self,shotInfo):
         x, y = shotInfo["coords"]["x"], shotInfo["coords"]["y"]
         shipId, shotNum =  shotInfo["slot"]
-        if shipId==0:
-            return "MISS"
+        if shipId==0 and shotNum==1:
+            return S.FIRST_MISS
+        elif shipId==0 and shotNum>1:
+            return S.ALREADY_MISS
         elif shotNum==1:
             self.reactToHit(x,y)
-            return "FIRST_HIT"
+            return S.FIRST_HIT
         elif shotNum>1:
             self.reactToHit(x,y)
-            return "ALREADY_HIT"
+            return S.ALREADY_HIT
         elif shotNum==-1:
             self.reactToSink()
-            return "JUST_SINKED"
+            return S.JUST_SINKED
         elif shotNum<-1:
-            return "ALREADY_SINKED"
+            return S.ALREADY_SINKED
     def humanTarget():
         pass
     def computerTarget(self,slots,strategy="basic"):
@@ -117,3 +121,4 @@ if ( __name__ == "__main__"):
     c = CLI()
     c.renderGrid(g,True,True);
     print(p.basicAIship(4,2,g.slots,g.ships))
+    g.shoot(["A",1])
