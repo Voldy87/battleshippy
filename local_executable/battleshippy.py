@@ -24,7 +24,7 @@ games = {
         m.AI_BATTLE: [p.PC,p.PC]
     }
 ships = {
-    2:[
+    6:[
         ["destroyer",1,2]
     ],
     10:[
@@ -35,7 +35,7 @@ ships = {
         ["carrier",1,5]
     ]
 } #loaded from config, normally includes or loads names (yaml parse)
-turn = None #togliere omonomia
+turn = ui = None #togliere omonomia
 cv = threading.Condition()
 
 class Action(threading.Thread):
@@ -43,16 +43,6 @@ class Action(threading.Thread):
         threading.Thread.__init__(self) 
         self.index = index
         self.myGrid, self.enemyGrid = grids[index], grids[1-index] #deve puntare all'array di 2 griglie
-        if(config["uiMode"] is i.CLI):
-            self.ui=CL.CLI()
-        elif(config["uiMode"] is i.GUI):
-            self.ui=CL.GUI()
-        else:
-            exit(1)#better an exception 
-##       if(dataMode=="localDB" || dataMode=="remoteDB"):
-##            self.data=DataDb()
-##        else:
-##            self.data=DataFile()
         self.me, self.enemy = players[index], players[1-index]
         self.isPC =  players[index].nature is p.PC
         self.output = config["outputPC"] or not self.isPC #may be different, e.g. in a 2 pc battle one wants to see what happens (consider introducing a delay)
@@ -73,7 +63,7 @@ class Action(threading.Thread):
         for elem in shipsToGive:
             vessel = Sh.Ship(elem[0],elem[2])
             while True:
-                coords = self.ui.askSingleShip(side,vessel)
+                coords = ui.askSingleShip(side,vessel)
                 if (self.myGrid.posChecker(self.minShipDistance,coords)):
                     break
             self.myGrid.addShip(vessel, coords, False)
@@ -91,21 +81,15 @@ class Action(threading.Thread):
     def endgame(self):
         return self.myGrid.allSinked() or self.enemyGrid.allSinked()
     def run(self):
-        UI = self.ui
-        if self.index==0:
-            print(self.me.name+" starts!!")
-            #no direct printing in prod
-        #for i in range(1,4):#
+        global ui
+        UI = ui
         while not self.enemyGrid.allSinked():
- 
             cv.acquire() #consider not blocking interaction for all block if not ciritcal, especially in GUI
             while not self.checkFlag():
-                print(str(self.me.name) + " waits for its turn\n")
                 cv.wait()
-            print("I AM "+str(self.me.name) + " and this is turn " + str(self.currentTurn()) +" \n")
             if self.currentTurn()==0: #"turn 0": ship positioning
                 if self.output:
-                    UI.startSplash(self.me.name)
+                    UI.startSplash(self.me.name,self.index==0)
                 if self.isPC :
                     self.shipsAutoPositioning("basic")
                 else:
@@ -118,9 +102,13 @@ class Action(threading.Thread):
                 if self.output:
                     UI.battleSplash(self.me.name)
             else: #"normal turn"
-                if turn>=3:
-                    UI.shotUpcome(self.me.name,self.myGrid.lastShotInfo,False,self.letCol) #enemy's last shot info
-                    UI.renderGrid(self.myGrid,True,True)
+                UI.turnSplash(self.me.name,self.currentTurn())
+                if turn>=3: #enemy shot result
+                    shooting_result = self.me.reactToShot(self.myGrid.lastShotInfo)
+                    coords, victory = self.myGrid.lastShotInfo['coords'], self.myGrid.allSinked()
+                    if self.output:
+                        UI.shotUpcome(self.me.name,coords,shooting_result,victory, False,self.letCol) #enemy's last shot info
+                        UI.renderGrid(self.myGrid,True,True)
                 if self.myGrid.allSinked():
                     cv.release()
                     break
@@ -130,25 +118,25 @@ class Action(threading.Thread):
                     OnlyNum = True
                 else: 
                     UI.shootSplash(self.me.name) 
-                    UI.renderGrid(self.enemyGrid,False,True)
+                    UI.renderGrid(self.enemyGrid,False,False)
                     pos = UI.askTarget(self.enemyGrid.dim) #gestione radius, da fare
                     OnlyNum = False
                 self.enemyGrid.shoot(pos,self.shotRadius,OnlyNum)
                 shooting_result = self.me.reactToShot(self.enemyGrid.lastShotInfo)
-                if self.output:#enemy shot result (includes both player types)
+                if self.output:#my shot result
                     coords, victory = self.enemyGrid.lastShotInfo['coords'], self.enemyGrid.allSinked()
                     UI.shotUpcome(self.me.name,coords,shooting_result,victory,True,self.letCol)
                     UI.renderGrid(self.enemyGrid,False,True)
-            if self.clear and not self.endgame(): #in case players share terminal (hum vs hum) one cannot see the others grids!
-                UI.changeSplash(self.me.name,self.enemy.name,3,3)
+            if self.output and self.clear and not self.endgame(): #in case players share terminal (hum vs hum) one cannot see the others grids!
+                UI.changeSplash(self.me.name,self.enemy.name,1,1)
             self.changeFlag()
             cv.notify()
             cv.release()
-            
-##        UI.showResults()
-##        UI.render(self.myGrid,True,False)
-##        UI.render(self.enemyGrid,True,False)
-##        UI.finishSplash()
+        if self.output:
+            UI.resultSplash(self.me.name,self.enemyGrid.allSinked())
+            UI.render(self.myGrid,True,False)
+            UI.render(self.enemyGrid,True,False)
+            UI.finishSplash()
 
 
 def initGame (side, playerNames, matchType,storageType):
@@ -166,11 +154,9 @@ def initGame (side, playerNames, matchType,storageType):
 def updateGlobalStats(stats):
     pass
 
-if __name__ == "__main__":#this will be also the shape of the main thread on the django server
-    
-       
+if __name__ == "__main__":#this will be also the shape of the main thread on the django server  
     #in case of start..
-    grids, players, clear = initGame(2,["andrea","computer"],m.VERSUS_PC,s.FILE_LOCAL)
+    grids, players, clear = initGame(6,["andrea","computer"],m.VERSUS_PC,s.FILE_LOCAL)
     # all above args of init are taken from config files or others, not hardcoded
     config = {
         "uiMode" : i.CLI, #args or ask prompt..
@@ -179,8 +165,18 @@ if __name__ == "__main__":#this will be also the shape of the main thread on the
         "radius" : 0, # taken from config, too
         "LetCol" : True, # idem as above
         "outputPC" : True,
-        "clear": True#clear
+        "clear": False#clear
     }
+    if(config["uiMode"] is i.CLI):
+        ui=CL.CLI()
+    elif(config["uiMode"] is i.GUI):
+        ui=CL.GUI()
+    else:
+        exit(1)#better an exception 
+##       if(dataMode=="localDB" || dataMode=="remoteDB"):
+##            self.data=DataDb()
+##        else:
+##            self.data=DataFile()
     gameEnded = False
     stats = None #global stats 
     threads=[None,None]

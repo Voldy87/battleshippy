@@ -43,12 +43,12 @@ class TestPlayerClassAndUtils(object):
         pos = ["C",3]
         assert g.shoot(pos) == True
         pos = coordsConvert(pos) #[2,2]
-        assert sorted(validSquares([pos],g.slots),key=itemgetter(0)) == sorted([[1,1],[1,2],[1,3], [2,1],[2,3],[3,1],[3,2],[3,3]],key=itemgetter(0))
-        g = G.Grid(6)
+        assert sorted(validSquares([pos],g.slots),key=itemgetter(0)) == sorted([[1,2],[2,1],[2,3],[3,2]],key=itemgetter(0))
+        g.clear()
         pos = ["A",2]
         assert g.shoot(pos) == True
         pos = coordsConvert(pos) #[1,0]
-        assert sorted(validSquares([pos],g.slots),key=itemgetter(0)) == sorted([[0,0],[0,1],[1,1], [2,0],[2,1]],key=itemgetter(0))
+        assert sorted(validSquares([pos],g.slots),key=itemgetter(0)) == sorted([[0,0],[1,1],[2,0]],key=itemgetter(0))
         pos2 = ["A",1]
         assert g.shoot(pos2) == True
         pos2 = coordsConvert(pos2) #[0,0]
@@ -56,7 +56,7 @@ class TestPlayerClassAndUtils(object):
         pos3 = ["F",4]
         assert g.shoot(pos3) == True
         pos3 = coordsConvert(pos3) #[3,5]
-        assert sorted(validSquares([pos3],g.slots),key=itemgetter(0)) == sorted([[2,4],[2,5], [3,4],[4,4],[4,5]],key=itemgetter(0))
+        assert sorted(validSquares([pos3],g.slots),key=itemgetter(0)) == sorted([[2,5],[3,4],[4,5]],key=itemgetter(0))
         pos4, pos5 = ["d",3],["D",4] #[2,3], [3,3]
         assert g.shoot(pos4) == True
         assert g.shoot(pos5) == True

@@ -36,21 +36,22 @@ class Player:
     def reactToShot(self,shotInfo):
         x, y = shotInfo["coords"]["x"], shotInfo["coords"]["y"]
         shipId, shotNum =  shotInfo["slot"]
-        if shipId==0 and shotNum==1:
-            return S.FIRST_MISS
-        elif shipId==0 and shotNum>1:
-            return S.ALREADY_MISS
-        elif shotNum==1:
-            self.reactToHit(x,y)
-            return S.FIRST_HIT
-        elif shotNum>1:
-            self.reactToHit(x,y)
-            return S.ALREADY_HIT
-        elif shotNum==-1:
-            self.reactToSink()
-            return S.JUST_SINKED
-        elif shotNum<-1:
-            return S.ALREADY_SINKED
+        if shipId == 0:
+            if shotNum==1:
+                return S.FIRST_MISS
+            elif shotNum>1:
+                return S.ALREADY_MISS
+        elif shipId != 0:
+            if shotNum==1:
+                self.reactToHit(x,y)
+                return S.FIRST_HIT
+            elif shotNum>1:
+                return S.ALREADY_HIT
+            elif shotNum==-1:
+                self.reactToSink()
+                return S.JUST_SINKED
+            elif shotNum<-1:
+                return S.ALREADY_SINKED
     def humanTarget():
         pass
     def computerTarget(self,slots,strategy="basic"):

@@ -75,24 +75,29 @@ class CLI:
     def coordString(self,coord,LetCol):
         vett = convert(coord,False,LetCol)
         return str(vett[0])+str(vett[1])
-    def startSplash(self,name):
+    def startSplash(self,name,starting):
         self.io.write("Welcome to the Battleship Game, "+name+"!")
-##    def askAllShips(self,side,ships):
-##        return None
+        self.io.write(["You", "Your opponent"][int(not starting)]+" will start")
     def gridSplash(self,name):
         self.io.write(name+", these are the ships as you have placed them:")
     def battleSplash(self,name):
         self.io.write("----------------------------------")
         self.io.write("Real battle starts, "+name+"!!")
+        self.io.write("----------------------------------")
+    def turnSplash(self,name,turn):
+        self.io.write("Turn "+str(turn)+", "+name)
     def shootSplash(self,name):
-        self.io.write("Dear "+me+", it's your turn tho shoot")
+        self.io.write("Dear "+name+", it's your turn to shoot")
         self.io.write("This is the situation of your oppenent's grid")
     def changeSplash(self,me,you,mytime=5,yourtime=5):
         self.io.write("Dear "+me+", your turn is finished")
         self.countdown(mytime,"Please pass the console to the other player ("+you+") after ")
         self.clear()
         self.countdown(yourtime,you+", your turn will start in ")      
-    def finishSplash(self,name):
+    def resultSplash(self,name,victory):
+        result = "won" if victory else "lost"
+        self.io.write("Dear "+name+", you have "+result)
+    def finishSplash(self):
         self.io.write("----------------------------------")
         self.io.write("Game over")
     def askSingleShip(self, side:int, ship:Ship):
@@ -162,16 +167,15 @@ class CLI:
         return pos
             
     def shotUpcome(self, name, pos, shotResult, victory, MyShot, LetCol):
-        if not shotInfo:
+        if not shotResult:
             raise Exception('No shots on this grid')
-        shipId, shots = shotInfo['slot']
         who = ["your", "your opponent's"]
         if not MyShot:
             who.reverse()
         string = "So, "+name+", "+who[0]+" shot to the "+ self.coordString([pos['x'],pos['y']],LetCol)+" position "
         if shotResult==s.ALREADY_MISS or shotResult==s.ALREADY_SINKED or shotResult==s.ALREADY_HIT:
             string+="(already used, however) "
-        if shotResult==FIRST_MISS or shotResult==s.ALREADY_MISS:
+        if shotResult==s.FIRST_MISS or shotResult==s.ALREADY_MISS:
             string += "has hit the sea!"
         else:
             string += "has hit a ship"

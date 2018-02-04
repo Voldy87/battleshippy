@@ -1,5 +1,6 @@
 from numpy import sign
 from random import seed,randint
+from math import sqrt
 from operator import itemgetter
 
 def coordsValidate(dim:int,vett:list,OnlyNum:bool=False)->bool:
@@ -69,7 +70,7 @@ def slotsWithShips(matrix):
     return count
 def validSquares(obj,matrix):
     '''Compute the neighboring cells around a series of shots on a ship (at least 1)
-     using double 0-indexed lists'''
+     using double 0-indexed lists; does not include diagonally adjacent positions'''
     side = len(matrix)
     x = obj[0][0]
     y = obj[0][1]
@@ -78,9 +79,10 @@ def validSquares(obj,matrix):
             [x2, y2]
             for x2 in range(x-1, x+2)
             for y2 in range(y-1, y+2)
-            if ( ((0<=x2<side)and(0<=y2<side)) and
-                     matrix[x2][y2][1]==0 and
-                     (x2!=x or y2!=y)
+            if ( ((0<=x2<side)and(0<=y2<side)) and # single x/y is valid
+                     matrix[x2][y2][0]==0 and # slot is without ship on
+                     (x2!=x or y2!=y) and #slot is not the one already hit
+                     abs(complex(x2-x,y2-y))<sqrt(2) #only horizontally or verticlly adjacent slots
                    )
         ]
         return neighbors(x,y)
