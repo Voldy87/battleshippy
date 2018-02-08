@@ -149,7 +149,7 @@ class Grid(SeaMap) :
                     if (coordsValidate(self.dim,target,True)):
                         self.takeShot(target)
                         self.lastAreaShotInfo.append(self.lastShotInfo)
-        return True
+        return pos #numeric coordinate of shot (or central if radius is active)
     def sinkedShips(self):
         return list(filter(lambda x : x["vessel"].sinked==True, self.ships))
     def allSinked(self):

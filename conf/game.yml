@@ -1,0 +1,143 @@
+---
+################
+# BATTLESHIPPY #
+################
+&name name: "Battleshippy"
+author: &author !!str Andrea Orlandi <battleshippy@voldy87.tk>
+version: 0.1.0-alpha
+url: ""
+last_modified: 2018-02-09T02:59:43.1Z
+lang: &lang Python
+contact: *author
+games: #from the human player prospective
+	? VERSUS_PC: 
+		- HUMAN
+		- PC
+   ? VERSUS_HUMAN: 
+   	- HUMAN
+   	- HUMAN
+   ? AI_BATTLE:
+   	- PC
+   	- PC
+side:
+ default: 10
+ range: 
+	- 2
+	- 100
+players:
+	- type: computer
+	  default_name: Computer
+	  separator: _
+	  index:
+	  	- 1
+	  	- 2
+	  	strategies:
+	  	 ship: 
+	  	 	- basic
+	  	 shoot: 
+	  	 	- basic
+	- type: human
+	  default_name: Player
+	  index:
+	  	- 1
+	  	- 2
+ships: #every possibile grid side has associated to a ship (identified by name) its quantity and length
+  - 2: 
+    	"destroyer": 
+    		- 1
+    		- 2
+  - 10:
+    	"destroyer": 
+    		- 1
+    		- 2
+    	"cruiser":
+    		- 1
+    		- 3
+    	"submarine": 
+    		- 1
+    		- 3
+    	"battleship":
+    		- 1
+    		- 4
+    	"carrier":
+    		- 1
+    		- 5
+area_shot: 0 #no radius if zero
+min_ship_distance: 0
+output_pc: 0
+timeouts:
+	start_game: 3
+	ship_insertion: 2
+	turn_change: 
+		- 5
+		- 3
+	credits: 5
+db_conf:
+	dev: !!str "db-dev.ini"
+	prod: !! str "db.ini"
+	databases:
+	 redis:
+	  name:
+	  tables:
+	   - name:
+	     fields:
+	     key:
+	     indexes:
+	   - name:
+	     fields:
+	 postgres:
+	  name:
+	  tables: 
+	   - 
+	   -    
+file_conf:
+
+types:
+	"executable":
+		*name 
+		language: *lang
+	"client_server":
+		*name
+		language: *lang
+	"peer_to_peer":
+		*name
+		language: *lang
+	"django":
+		*name
+		language: 
+			- *lang
+			- HTML
+			- Sass
+			- CSS
+			- JavaScript
+interfaces:
+ terminal:
+  ansi_codes:
+   - std_prefix:'\x1b['
+     fg_prefix:'0;'
+     suffix:'m'
+   - reset:
+   	type:final
+   	val:0
+     void:
+      type:bg
+      val:44
+     ship:
+     	type:bg
+     	val:42
+     shot:
+      type:fg
+      val:37
+      chr:216
+     last_shot:
+      type:fg
+      val:31
+      chr:216 
+     sinked:
+      type:bg
+      val:45
+ screen:
+  media:
+   img:
+   video:
+...

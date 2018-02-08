@@ -41,30 +41,30 @@ class TestPlayerClassAndUtils(object):
     def test_validSquares(jones):
         g = G.Grid(6)
         pos = ["C",3]
-        assert g.shoot(pos) == True
+        assert bool(g.shoot(pos)) == True
         pos = coordsConvert(pos) #[2,2]
         assert sorted(validSquares([pos],g.slots),key=itemgetter(0)) == sorted([[1,2],[2,1],[2,3],[3,2]],key=itemgetter(0))
         g.clear()
         pos = ["A",2]
-        assert g.shoot(pos) == True
+        assert bool(g.shoot(pos)) == True
         pos = coordsConvert(pos) #[1,0]
         assert sorted(validSquares([pos],g.slots),key=itemgetter(0)) == sorted([[0,0],[1,1],[2,0]],key=itemgetter(0))
         pos2 = ["A",1]
-        assert g.shoot(pos2) == True
+        assert bool(g.shoot(pos2)) == True
         pos2 = coordsConvert(pos2) #[0,0]
         assert sorted(validSquares([pos,pos2],g.slots),key=itemgetter(0)) == [[2,0]]
         pos3 = ["F",4]
-        assert g.shoot(pos3) == True
+        assert bool(g.shoot(pos3)) == True
         pos3 = coordsConvert(pos3) #[3,5]
         assert sorted(validSquares([pos3],g.slots),key=itemgetter(0)) == sorted([[2,5],[3,4],[4,5]],key=itemgetter(0))
         pos4, pos5 = ["d",3],["D",4] #[2,3], [3,3]
-        assert g.shoot(pos4) == True
-        assert g.shoot(pos5) == True
+        assert bool(g.shoot(pos4)) == True
+        assert bool(g.shoot(pos5)) == True
         pos4, pos5 = coordsConvert(pos4),coordsConvert(pos5)
         assert sorted(validSquares([pos4,pos5],g.slots),key=itemgetter(0)) == [[1,3],[4,3]]
         pos4, pos5 = ["e",2],["d",2] #[1,4], [1,3]
-        assert g.shoot(pos4) == True
-        assert g.shoot(pos5) == True
+        assert bool(g.shoot(pos4)) == True
+        assert bool(g.shoot(pos5)) == True
         pos4, pos5 = coordsConvert(pos4),coordsConvert(pos5)
         assert sorted(validSquares([pos4,pos5],g.slots),key=itemgetter(1)) == [[1,2],[1,5]]
     def test_reactToShot(cleese):
@@ -323,47 +323,47 @@ class TestCliClass(object):
         assert g.shoot(["H",1],0) == False
         assert g.shoot(["B",44],10) == False
         assert g.shoot(["z",2],1) == False
-        assert g.shoot(["A",2],1) == True
-        assert g.shoot(["B",1],0) == True
-        assert g.shoot(["E",1],10) == True
-        assert g.shoot(["D",2],0) == True
-        assert g.shoot(["C",3],0) == True
-        assert g.shoot(["E",3],2) == True 
+        assert bool(g.shoot(["A",2],1)) == True
+        assert bool(g.shoot(["B",1],0)) == True
+        assert bool(g.shoot(["E",1],10)) == True
+        assert bool(g.shoot(["D",2],0)) == True
+        assert bool(g.shoot(["C",3],0)) == True
+        assert bool(g.shoot(["E",3],2)) == True 
     def test_gridRenderAndShoot(palin):
         g = G.Grid(10)
         c = C.CLI()
         c.renderGrid(g,False,False)#c.print(g.slots,False) 
         assert g.addShip(S.Ship("test",4), [["B",2],["B",3],["B",1],["B",4]]) == True
         c.renderGrid(g,False,True)#c.print(g.slots,False)
-        assert g.shoot(["B",2],0) == True
+        assert bool(g.shoot(["B",2],0)) == True
         c.renderGrid(g,True,False)#c.print(g.slots,False)
-        assert  g.shoot(["D",2],0) == True
+        assert  bool(g.shoot(["D",2],0)) == True
         c.renderGrid(g,False,False)#c.print(g.slots,False)
-        assert g.shoot(["B",3],0) == True
-        assert g.shoot(["B",1],0) == True
-        assert g.shoot(["B",1],0) == True
+        assert bool(g.shoot(["B",3],0)) == True
+        assert bool(g.shoot(["B",1],0)) == True
+        assert bool(g.shoot(["B",1],0)) == True
         c.renderGrid(g,False,True)#c.print(g.slots,False)
-        assert g.shoot(["B",4],0) == True
+        assert bool(g.shoot(["B",4],0)) == True
         c.renderGrid(g,False,False)#c.print(g.slots,False)
-        assert g.shoot(["C",4],0) == True
-        assert g.shoot(["C",4],0) == True
-        assert g.shoot(["A",4],0) == True
+        assert bool(g.shoot(["C",4],0)) == True
+        assert bool(g.shoot(["C",4],0)) == True
+        assert bool(g.shoot(["A",4],0)) == True
         c.renderGrid(g,False,False)
-        assert g.shoot(["A",2],0) == True
-        assert g.shoot(["C",2],0) == True
+        assert bool(g.shoot(["A",2],0)) == True
+        assert bool(g.shoot(["C",2],0)) == True
         assert g.addShip(S.Ship("test2",7), [["c",8],["f",8],["D",8],["B",8],["e",8],["g",8],["H",8]]) == True
         c.renderGrid(g,False,False)
         c.renderGrid(g,True,True)
         assert g.shoot(["p",2],0) == False
-        assert g.shoot(["A",2],0) == True
-        assert g.shoot(["C",8],0) == True
+        assert bool(g.shoot(["A",2],0)) == True
+        assert bool(g.shoot(["C",8],0)) == True
         assert g.shoot(["e",23],0) == False
-        assert g.shoot(["A",8],0) == True
-        assert g.shoot(["d",8],0) == True
-        assert g.shoot(["d",10],0) == True
+        assert bool(g.shoot(["A",8],0)) == True
+        assert bool(g.shoot(["d",8],0)) == True
+        assert bool(g.shoot(["d",10],0)) == True
         c.renderGrid(g,False,True)
         c.renderGrid(g,True,False)
         for i in range(1,11):
-            assert g.shoot(["A",i],0) == True
+            assert bool(g.shoot(["A",i],0)) == True
         c.renderGrid(g,False,False)
         c.renderGrid(g,True,True)

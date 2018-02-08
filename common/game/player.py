@@ -33,7 +33,7 @@ class Player:
         self.lastGoodShots.insert(0,[x,y])
     def reactToSink(self):
         self.lastGoodShots = []
-    def reactToShot(self,shotInfo):
+    def reactToShot(self,shotInfo,registerShot=True):
         x, y = shotInfo["coords"]["x"], shotInfo["coords"]["y"]
         shipId, shotNum =  shotInfo["slot"]
         if shipId == 0:
@@ -43,12 +43,14 @@ class Player:
                 return S.ALREADY_MISS
         elif shipId != 0:
             if shotNum==1:
-                self.reactToHit(x,y)
+                if registerShot:
+                    self.reactToHit(x,y)
                 return S.FIRST_HIT
             elif shotNum>1:
                 return S.ALREADY_HIT
             elif shotNum==-1:
-                self.reactToSink()
+                if registerShot:
+                    self.reactToSink()
                 return S.JUST_SINKED
             elif shotNum<-1:
                 return S.ALREADY_SINKED

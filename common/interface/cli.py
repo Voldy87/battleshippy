@@ -7,15 +7,30 @@ from colorama import init # call init() at start
 
 from common.game.grid import Grid, coordsConvert as convert
 from common.interface.i_o import I_O
-from common.utils.enums import ShootType as s
+from common.utils.enums import ShootType as s, InterfaceType
 #togliere questi sotto se nn faccio il test qui
 # prelevare i messaggi da un file (also good for i18n)
 from common.game.ship import Ship
 
+def consoleCode(obj):
+    return obj["fg"]+obj["bg"]+obj["chr"]+obj["rst"];
 class CLI:
     def __init__(self):
         init()
-        self.cliSquareMap = { 'Void':'\x1b[44m', 'Ship':'\x1b[42m', 'Shot':['\x1b[0;37m',chr(216),'\x1b[0;31m'], 'Sinked':'\x1b[45m' }
+        self.cliSquareMap = { #must be built from config
+            'Void':'\x1b[44m',
+            'Ship':'\x1b[42m',
+            'Shot':['\x1b[0;37m',chr(216),'\x1b[0;31m'], #duplica in shot e last shot (vedi config)
+            'Sinked':'\x1b[45m'
+        }
+##        self.gridColors:{
+##            "Reset":,
+##            "Void": {"bg":},
+##            "Ship": {"bg":},
+##            "Sinked": {"bg":},
+##            "Shot": {"fg":, "chr":},
+##            "LastShot": {"fg":, "chr":}
+##        }
         self.io = I_O('stdCLI','stdCLI')
     def clear(self):
         self.io.clear()
@@ -36,23 +51,23 @@ class CLI:
     def getSquareCode(self,slot,show_ships, highlightShot): #fg/pre bg/mid let/post
         what = slot[0]
         shots = slot[1]
-        pre=''
+        pre='' #out = {"bg":'', "fg":'',"chr":' ', "rst":'\x1b[0m'}
         post=' '
         mid =''
         if (shots<0):
-            pre = self.cliSquareMap['Sinked']
-            return (pre+mid+post+'\x1b[0m')
+            pre = self.cliSquareMap['Sinked'] #out["bg"]=gridColors["Sinked"]["bg"]
+            return (pre+mid+post+'\x1b[0m') #return consoleCode(out)
         elif (shots>0):
-            post = self.cliSquareMap['Shot'][1]
+            post = self.cliSquareMap['Shot'][1] #out["chr"]=gridColors["Shot"]["chr"]
             if (highlightShot): #the slot i'm printing needs to be highlighted?
-                pre = self.cliSquareMap['Shot'][2]
+                pre = self.cliSquareMap['Shot'][2] #out["fg"]=gridColors["LastShot"]["fg"]
             else:
-                pre = self.cliSquareMap['Shot'][0]
+                pre = self.cliSquareMap['Shot'][0] #out["fg"]=gridColors["Shot"]["fg"]
         if (what==0)or(not show_ships and shots==0):
-            mid = self.cliSquareMap['Void']
+            mid = self.cliSquareMap['Void'] #out["bg"]=gridColors["Void"]["bg"]
         else:
-            mid = self.cliSquareMap['Ship']
-        return (pre+mid+post+'\x1b[0m')
+            mid = self.cliSquareMap['Ship'] #out["bg"]=gridColors["Ship"]["bg"]
+        return (pre+mid+post+'\x1b[0m') #return consoleCode(out)
     def renderGrid(self, grid, fullView, lastshotView): #var def have to go outisde gthis fun
         '''Show the grid on the console, with shoots and ships if present and desired:
             - grid to show
@@ -75,9 +90,16 @@ class CLI:
     def coordString(self,coord,LetCol):
         vett = convert(coord,False,LetCol)
         return str(vett[0])+str(vett[1])
+    def enterSplash(self):
+        self.io.write("####################")
+        self.io.write("##  BATTLESHIPPY  ##")
+        self.io.write("####################")
     def startSplash(self,name,starting):
         self.io.write("Welcome to the Battleship Game, "+name+"!")
         self.io.write(["You", "Your opponent"][int(not starting)]+" will start")
+    def insertedSplash(self,grid):
+        self.io.write("Your grid status:")
+        self.renderGrid(grid,True,False)
     def gridSplash(self,name):
         self.io.write(name+", these are the ships as you have placed them:")
     def battleSplash(self,name):
@@ -91,15 +113,37 @@ class CLI:
         self.io.write("This is the situation of your oppenent's grid")
     def changeSplash(self,me,you,mytime=5,yourtime=5):
         self.io.write("Dear "+me+", your turn is finished")
-        self.countdown(mytime,"Please pass the console to the other player ("+you+") after ")
-        self.clear()
-        self.countdown(yourtime,you+", your turn will start in ")      
-    def resultSplash(self,name,victory):
-        result = "won" if victory else "lost"
-        self.io.write("Dear "+name+", you have "+result)
+        if yourtime!=0:
+            self.countdown(mytime,"Please pass the console to the other player ("+you+") after ")
+            self.clear()
+            self.countdown(yourtime,you+", your turn will start in ")      
+    def resultSplash(self,name,myVictory,itsVictory,myRetire):
+        (result,who,whom) = ("won","you","your enemy") if (myVictory or (not itsVictory and not myRetire)) else ("lost","your opponent","you")
+        how = whom+" retired" if (myRetire or (not myRetire and not myVictory and not itsVictory)) else who+" sank all the ships belonging to "+whom
+        self.io.write("----------------------------------")
+        string = "Dear "+name+", "+how+", so "+who+" won."
+        self.io.write(string)
+    def finalSplash(self):
+        self.io.write("These are the grids as match finished:")
+    def endgridsSplash(self,name):
+        self.io.write(name+"'s one")
     def finishSplash(self):
         self.io.write("----------------------------------")
         self.io.write("Game over")
+        self.io.write("----------------------------------")
+    def exitSplash(self):
+        self.io.write("####################")
+        self.io.write("##    GOODBYE!    ##")
+        self.io.write("####################")
+    def askUI(self): #TODO:checking input
+        self.io.write("Do you want to activate the Graphical Mode?(Y/N)")
+        res = self.io.read().upper()
+        #check 
+        return InterfaceType.GUI if res=="Y" else InterfaceType.CLI
+    def askConfig(self,configMap):
+       # for spam in configMap:
+          #  if dataMode uiMode outputPC clear shipAI shootAI
+        pass
     def askSingleShip(self, side:int, ship:Ship):
         """ Ask all the required positions for a single ship: only check that all positions are given:
         returns the array with the inserted coordinates, in alphanumeric format (e.g. ["C",5]) """
@@ -114,8 +158,8 @@ class CLI:
                 self.io.write("Insert "+name+" ship position ("+str(spam)+" of "+str(dim)+" - "+given+")")
                 while True:
                     self.io.write("VERTICAL/COLUMN(letter):")
-                    x = self.io.read()
-                    if (65<=ord(x.upper())<=65+side-1):
+                    x = self.io.read().upper()
+                    if (len(x)>0 and 65<=ord(x)<=65+side-1):
                         break
                     self.io.write("A letter in the range A-"+chr(65+side-1)+", please")
                 while True:
@@ -148,7 +192,7 @@ class CLI:
             while True:
                 self.io.write("VERTICAL/COLUMN(letter):")
                 x = self.io.read().upper()
-                if (65<=ord(x)<=65+side-1):
+                if (len(x)>0 and 65<=ord(x)<=65+side-1):
                     break
                 self.io.write("A letter in the range A-"+chr(65+side-1)+", please") #improve
             while True:
@@ -165,7 +209,10 @@ class CLI:
                     self.io.write ('A number between 1 and '+ str(side) + " please")
             pos = [x ,y]
         return pos
-            
+    def askRetire(self):
+        self.io.write ('Do you want to retire?(Y, otherwise continue)')
+        res = self.io.read().upper()
+        return len(res)>0 and res[0]=="Y"
     def shotUpcome(self, name, pos, shotResult, victory, MyShot, LetCol):
         if not shotResult:
             raise Exception('No shots on this grid')
@@ -188,6 +235,11 @@ class CLI:
         if victory:
             string += " and, in addition, this was "+who[1]+" last ship!"
         self.io.write(string)
+    def askExit(self):
+        self.io.write("Do you want to play a new game?")
+        self.io.write("Y to accept, otherwise exit)")
+        res = self.io.read().upper()
+        return not(len(res)>0 and res[0]=="Y")
 if ( __name__ == "__main__"):
     dim = 4
     shiplen = 2

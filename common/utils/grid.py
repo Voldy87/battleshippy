@@ -74,15 +74,16 @@ def validSquares(obj,matrix):
     side = len(matrix)
     x = obj[0][0]
     y = obj[0][1]
+    print(str(len(obj)))
     if (len(obj)<2): #last shot before this one hit a ship for the first time
         neighbors = lambda x, y : [
             [x2, y2]
             for x2 in range(x-1, x+2)
             for y2 in range(y-1, y+2)
             if ( ((0<=x2<side)and(0<=y2<side)) and # single x/y is valid
-                     matrix[x2][y2][0]==0 and # slot is without ship on
+                     matrix[x2][y2][1]==0 and # slot was not already shot
                      (x2!=x or y2!=y) and #slot is not the one already hit
-                     abs(complex(x2-x,y2-y))<sqrt(2) #only horizontally or verticlly adjacent slots
+                     abs(complex(x2-x,y2-y))<sqrt(2) #only horizontally or vertically adjacent slots
                    )
         ]
         return neighbors(x,y)
